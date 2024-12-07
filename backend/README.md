@@ -3,6 +3,14 @@
 ## Overview
 This document details the technical implementation of the scheduling system's backend. For general project information, setup instructions, and API documentation, please refer to the [main README](../README.md).
 
+## Current Dependencies
+- Express 4.18.2
+- TypeScript 5.7.2
+- Node.js 16+
+- ts-node-dev 2.0.0 (development)
+- UUID 11.x
+- ESLint 9.x
+
 ## Architecture
 
 ### Core Components
@@ -69,6 +77,24 @@ Real-world performance measurements show:
    - Gap minimization
    - Grade grouping
 
+## Development Setup
+
+### Installation
+```bash
+npm install
+```
+
+### Running the Server
+```bash
+npm run dev
+```
+The server will start on http://localhost:3001 with hot-reload enabled.
+
+### Running Tests
+```bash
+npm test
+```
+
 ## Testing
 
 ### Test Coverage
@@ -90,12 +116,6 @@ The system has been extensively tested with real schedule data including:
 - Complex conflict patterns (e.g., Pre-K classes with up to 11 conflicts)
 - Different scheduling densities per day
 - Grade-specific scheduling patterns
-
-Current test results show successful scheduling of 28 real-world classes with the following distribution:
-- Tuesday (9/3/24): 8 classes
-- Wednesday (9/4/24): 8 classes
-- Thursday (9/5/24): 8 classes
-- Friday (9/6/24): 4 classes
 
 ## Implementation Examples
 
@@ -134,11 +154,6 @@ const constraints: ScheduleConstraints = {
 3. Update performance metrics if algorithm changes
 4. Follow TypeScript best practices
 5. Maintain backward compatibility where possible
-
-### Running Tests
-```bash
-npm test
-```
 
 ### Adding New Tests
 1. Add test cases to `scheduler.test.ts`

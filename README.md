@@ -12,6 +12,7 @@ This project implements an automated class scheduling system for schools, capabl
 - ✅ Basic constraint management
 - ✅ Frontend class selection and display
 - ✅ Backend storage service with validation
+- ✅ Dependency updates and modernization
 
 ### In Progress
 - 🔄 Schedule generation algorithm implementation
@@ -20,16 +21,17 @@ This project implements an automated class scheduling system for schools, capabl
 - 🔄 Quality metrics tracking
 
 ### Recent Updates
-1. **PDF Import System**
+1. **Major Dependency Updates** (Dec 7, 2023)
+   - Updated Next.js to version 15
+   - Updated React to version 18 (stable)
+   - Updated backend dependencies including Express
+   - Fixed security vulnerabilities
+   - Improved TypeScript compatibility
+
+2. **PDF Import System**
    - Implemented PDF parsing with Python backend
    - Added error handling and validation
    - Integrated with frontend upload component
-
-2. **Data Persistence**
-   - Added robust storage service with validation
-   - Implemented automatic backups
-   - Added JSON validation and error handling
-   - Fixed file corruption issues
 
 3. **UI Improvements**
    - Added scrollable class dropdown
@@ -54,6 +56,19 @@ This project implements an automated class scheduling system for schools, capabl
 - TypeScript 4.5+
 - Python 3.8+ (for PDF parsing)
 
+### Dependencies
+#### Frontend
+- Next.js 15.0.4
+- React 18.x
+- TypeScript 5.x
+- Tailwind CSS
+- Radix UI Components
+
+#### Backend
+- Express 4.18.2
+- TypeScript 5.x
+- Node.js 16+
+
 ### Installation
 
 1. Clone the repository:
@@ -64,7 +79,7 @@ cd school-scheduler
 
 2. Install backend dependencies:
 ```bash
-cd new-scheduler/backend
+cd backend
 npm install
 ```
 
@@ -87,16 +102,14 @@ pip install -r requirements.txt
 cd backend
 npm run dev
 ```
+The backend will be available at http://localhost:3001
 
 2. Start the frontend development server:
 ```bash
 cd frontend
 npm run dev
 ```
-
-The application will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001
+The frontend will be available at http://localhost:3000
 
 ### File Structure
 ```
@@ -155,12 +168,6 @@ new-scheduler/
 - `GET /api/schedule/status/:id` - Get generation status
 
 ## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 When contributing, please:
 1. Update relevant documentation
