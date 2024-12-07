@@ -1,0 +1,118 @@
+[
+  {
+    "classNumber": "5-514",
+    "grade": "5",
+    "defaultConflicts": [
+      {
+        "dayOfWeek": 1,
+        "period": 3
+      },
+      {
+        "dayOfWeek": 2,
+        "period": 3
+      },
+      {
+        "dayOfWeek": 2,
+        "period": 4
+      },
+      {
+        "dayOfWeek": 3,
+        "period": 4
+      },
+      {
+        "dayOfWeek": 4,
+        "period": 7
+      },
+      {
+        "dayOfWeek": 5,
+        "period": 7
+      }
+    ],
+    "active": true,
+    "id": "b03fa9ee-9b38-4365-af00-7c93aa324f4b",
+    "createdAt": "2024-12-06T04:42:48.113Z",
+    "updatedAt": "2024-12-06T04:42:48.113Z"
+  },
+  {
+    "classNumber": "5-511",
+    "grade": "5",
+    "defaultConflicts": [
+      {
+        "dayOfWeek": 1,
+        "period": 3
+      },
+      {
+        "dayOfWeek": 2,
+        "period": 3
+      },
+      {
+        "dayOfWeek": 2,
+        "period": 7
+      },
+      {
+        "dayOfWeek": 3,
+        "period": 4
+      },
+      {
+        "dayOfWeek": 4,
+        "period": 4
+      },
+      {
+        "dayOfWeek": 5,
+        "period": 8
+      }
+    ],
+    "active": true,
+    "id": "5605aef2-d976-4258-b0c5-d6799a90c9ec",
+    "createdAt": "2024-12-06T04:50:38.411Z",
+    "updatedAt": "2024-12-06T04:50:38.411Z"
+  },
+  {
+    "classNumber": "5-511",
+    "grade": "5",
+    "defaultConflicts": [
+      {
+        "dayOfWeek": 1,
+        "period": 3
+      },
+      {
+        "dayOfWeek": 2,
+        "period": 3
+      },
+      {
+        "dayOfWeek": 2,
+        "period": 7
+      },
+      {
+        "dayOfWeek": 3,
+        "period": 4
+      },
+      {
+        "dayOfWeek": 4,
+        "period": 4
+      },
+      {
+        "dayOfWeek": 5,
+        "period": 8
+      }
+    ],
+    "active": true,
+    "id": "1e854b00-5dd9-4a02-b376-da980fbc350d",
+    "createdAt": "2024-12-07T21:15:16.762Z",
+    "updatedAt": "2024-12-07T21:15:16.762Z"
+  }
+]762Z"
+  }
+]a-0fb3ef347c8a",
+    "createdAt": "2024-12-07T21:15:16.760Z",
+    "updatedAt": "2024-12-07T21:15:16.760Z"
+  }
+]iod": 6
+      }
+    ],
+    "active": true,
+    "id": "68247c3c-5b58-41e3-8dd3-c5ef8d1d96b1",
+    "createdAt": "2024-12-07T21:15:16.760Z",
+    "updatedAt": "2024-12-07T21:15:16.760Z"
+  }
+]
