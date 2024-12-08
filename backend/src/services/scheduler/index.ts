@@ -1,4 +1,7 @@
-import { Class, ScheduleConstraints, ScheduleEntry } from 'shared/types';
+import { Class, ScheduleConstraints, ScheduleEntry, Period } from 'shared/types';
+import { SlotFinder } from './slotFinder';
+import { SchedulerOptimizer } from './optimizer';
+import { sortByConstraints } from '../common/sorting';
 
 export class SchedulerService {
   private classes: Map<string, Class> = new Map();

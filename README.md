@@ -3,6 +3,91 @@
 ## Project Overview
 This project implements an automated class scheduling system for schools, capable of generating conflict-free schedules while respecting various constraints. The system provides an intuitive interface for managing class schedules and includes comprehensive testing with both synthetic and real-world data.
 
+## Getting Started
+
+### Prerequisites
+- Node.js 16+ and npm
+- TypeScript 4.5+
+- Python 3.8+ (for PDF parsing)
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd school-scheduler
+```
+
+2. Run the setup script:
+```bash
+npm run setup
+```
+This will:
+- Install dependencies for all packages (shared, backend, frontend)
+- Create necessary directories
+- Set up development environment
+
+3. Create your environment configuration:
+```bash
+cp config/dev.env.example config/dev.env
+```
+Then edit `dev.env` with your specific settings.
+
+### Development
+
+Start all development servers:
+```bash
+npm run dev
+```
+This will start both backend and frontend servers concurrently.
+
+Or start services individually:
+```bash
+# Start backend only
+cd backend && npm run dev
+
+# Start frontend only
+cd frontend && npm run dev
+```
+
+### Building for Production
+
+Build all packages:
+```bash
+npm run build
+```
+
+Or build packages individually:
+```bash
+npm run build:shared   # Build shared types
+npm run build:backend  # Build backend
+npm run build:frontend # Build frontend
+```
+
+## Project Structure
+```
+simple-scheduler/
+├── backend/          # Backend server
+│   ├── src/
+│   │   ├── services/    # Core services
+│   │   │   ├── scheduler/   # Scheduling logic
+│   │   │   ├── pdf/        # PDF processing
+│   │   │   └── storage/    # Data persistence
+│   │   └── __tests__/     # Test files
+├── frontend/        # Frontend application
+├── shared/          # Shared types and utilities
+├── docs/           # Documentation
+│   ├── Technical/      # Technical documentation
+│   ├── Features/       # Feature documentation
+│   └── Development/    # Development guides
+├── scripts/        # Development scripts
+│   ├── setup.sh       # Project setup
+│   ├── dev.sh         # Development servers
+│   └── build.sh       # Build process
+├── config/         # Configuration templates
+└── README.md
+```
+
 ## Current Status (Last Updated: Dec 7, 2023)
 
 ### Completed Features
@@ -71,122 +156,6 @@ This project implements an automated class scheduling system for schools, capabl
 - Real-time schedule generation
 - Schedule optimization
 - Quality metrics tracking
-
-## Getting Started
-
-### Prerequisites
-- Node.js 16+ and npm
-- TypeScript 4.5+
-- Python 3.8+ (for PDF parsing)
-
-### Dependencies
-#### Frontend
-- Next.js 15.0.4
-- React 18.x
-- TypeScript 5.x
-- Tailwind CSS
-- Radix UI Components
-
-#### Backend
-- Express 4.18.2
-- TypeScript 5.x
-- Node.js 16+
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd school-scheduler
-```
-
-2. Install backend dependencies:
-```bash
-cd backend
-npm install
-```
-
-3. Install frontend dependencies:
-```bash
-cd ../frontend
-npm install
-```
-
-4. Install Python dependencies:
-```bash
-cd ../backend/python
-pip install -r requirements.txt
-```
-
-### Development
-
-1. Start the backend server:
-```bash
-cd backend
-npm run dev
-```
-The backend will be available at http://localhost:3001
-
-2. Start the frontend development server:
-```bash
-cd frontend
-npm run dev
-```
-The frontend will be available at http://localhost:3000
-
-### Using the Application
-
-#### Class Management
-1. **Import Classes via PDF**:
-   - Click the "Import PDF Schedule" area
-   - Select your PDF file
-   - Classes will be automatically imported
-
-2. **Manual Class Creation**:
-   - Fill in the "Add New Class" form
-   - Enter class number
-   - Select grade level
-   - Click "Add Class"
-
-3. **Edit Existing Classes**:
-   - Select a class from the dropdown
-   - Click the "Edit" button
-   - Modify class details
-   - Click "Update Class"
-
-4. **Manage Conflicts**:
-   - Select a class from the dropdown
-   - Use the conflict grid to toggle conflicts
-   - Click on time slots to mark/unmark conflicts
-
-#### Constraint Management
-1. **Manage Blackout Periods**:
-   - Navigate to the Constraints section
-   - Use the calendar interface to:
-     - Click/drag to block individual periods
-     - Use top buttons to block full days
-     - Use side buttons to block periods across days
-   - Use undo/redo to review changes
-   - Save constraints when finished
-
-### File Structure
-```
-new-scheduler/
-├── backend/          # See backend/README.md for detailed backend documentation
-│   ├── data/        # Persistent storage
-│   │   ├── backups/ # Automatic backups
-│   │   ├── classes.json
-│   │   └── constraints.json
-│   ├── python/      # PDF parsing
-│   │   └── pdf_parser/
-│   └── src/
-│       ├── api/     # API routes
-│       └── services/# Business logic
-└── frontend/
-    └── app/
-        ├── components/ # React components
-        └── lib/        # API clients
-```
 
 ## Known Issues and Limitations
 1. PDF parsing may require specific format

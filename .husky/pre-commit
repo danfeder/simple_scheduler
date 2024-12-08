@@ -1,0 +1,14 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run type checking
+echo "🔍 Type checking..."
+npm run type-check
+
+# Run linting
+echo "🧹 Linting..."
+npm run lint
+
+# Run tests
+echo "🧪 Running tests..."
+npm run test 

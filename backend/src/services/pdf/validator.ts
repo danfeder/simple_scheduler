@@ -38,4 +38,11 @@ export const validatePdfSchedule = async (pdfBuffer: Buffer): Promise<Validation
       errors: ['Failed to validate PDF file']
     };
   }
+}
+
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
 } 
