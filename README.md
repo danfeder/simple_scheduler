@@ -7,6 +7,7 @@ This project implements an automated class scheduling system for schools, capabl
 
 ### Completed Features
 - ✅ PDF schedule import functionality
+- ✅ Manual class creation and editing
 - ✅ Class data persistence with backup system
 - ✅ Class conflict visualization and management
 - ✅ Basic constraint management
@@ -21,30 +22,40 @@ This project implements an automated class scheduling system for schools, capabl
 - 🔄 Quality metrics tracking
 
 ### Recent Updates
-1. **Major Dependency Updates** (Dec 7, 2023)
+1. **Manual Class Management** (Dec 7, 2023)
+   - Added ability to manually create classes
+   - Added class editing functionality
+   - Improved class conflict management UI
+   - Integrated with existing PDF import system
+
+2. **Major Dependency Updates** (Dec 7, 2023)
    - Updated Next.js to version 15
    - Updated React to version 18 (stable)
    - Updated backend dependencies including Express
    - Fixed security vulnerabilities
    - Improved TypeScript compatibility
 
-2. **PDF Import System**
+3. **PDF Import System**
    - Implemented PDF parsing with Python backend
    - Added error handling and validation
    - Integrated with frontend upload component
 
-3. **UI Improvements**
+4. **UI Improvements**
    - Added scrollable class dropdown
    - Improved class conflict visualization
    - Fixed TypeScript type issues
    - Enhanced error handling and user feedback
+   - Added form validation for class creation
 
 ## Features
 
 ### User Features
-- Class management with conflict detection
+- Class Management:
+  - Import classes via PDF upload
+  - Manually create new classes
+  - Edit existing classes
+  - Manage class conflicts visually
 - Constraint-based scheduling
-- PDF schedule import
 - Real-time schedule generation
 - Schedule optimization
 - Quality metrics tracking
@@ -110,6 +121,31 @@ cd frontend
 npm run dev
 ```
 The frontend will be available at http://localhost:3000
+
+### Using the Application
+
+#### Class Management
+1. **Import Classes via PDF**:
+   - Click the "Import PDF Schedule" area
+   - Select your PDF file
+   - Classes will be automatically imported
+
+2. **Manual Class Creation**:
+   - Fill in the "Add New Class" form
+   - Enter class number
+   - Select grade level
+   - Click "Add Class"
+
+3. **Edit Existing Classes**:
+   - Select a class from the dropdown
+   - Click the "Edit" button
+   - Modify class details
+   - Click "Update Class"
+
+4. **Manage Conflicts**:
+   - Select a class from the dropdown
+   - Use the conflict grid to toggle conflicts
+   - Click on time slots to mark/unmark conflicts
 
 ### File Structure
 ```

@@ -11,6 +11,42 @@ This document details the technical implementation of the scheduling system's ba
 - UUID 11.x
 - ESLint 9.x
 
+## API Endpoints
+
+### Classes
+```typescript
+// Get all classes
+GET /api/classes
+Response: Class[]
+
+// Create a new class
+POST /api/classes
+Body: {
+  classNumber: string;
+  grade: GradeLevel;
+  defaultConflicts?: Conflict[];
+}
+Response: Class
+
+// Update a class
+PUT /api/classes/:id
+Body: Partial<Class>
+Response: Class
+
+// Delete a class
+DELETE /api/classes/:id
+Response: boolean
+
+// Import PDF schedule
+POST /api/classes/import
+Body: FormData (file)
+Response: Class[]
+
+// Get class conflicts
+GET /api/classes/:id/conflicts
+Response: Conflict[]
+```
+
 ## Architecture
 
 ### Core Components
@@ -38,9 +74,21 @@ interface ScheduleEntry {
     period: Period;
 }
 
+interface Class {
+    id?: string;
+    classNumber: string;
+    grade: GradeLevel;
+    defaultConflicts: Conflict[];
+}
+
 type GradeLevel = 'Pre-K' | 'K' | '1' | '2' | '3' | '4' | '5' | 'multiple';
 type DayOfWeek = 1 | 2 | 3 | 4 | 5;  // Monday to Friday
 type Period = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+interface Conflict {
+    dayOfWeek: DayOfWeek;
+    period: Period;
+}
 ```
 
 ### Algorithm Details
