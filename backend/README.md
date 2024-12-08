@@ -47,6 +47,26 @@ GET /api/classes/:id/conflicts
 Response: Conflict[]
 ```
 
+### Constraints
+```typescript
+// Get current constraints
+GET /api/constraints
+Response: ScheduleConstraints
+
+// Update constraints
+PUT /api/constraints
+Body: ScheduleConstraints
+Response: ScheduleConstraints
+
+// Validate constraints
+POST /api/constraints/validate
+Body: ScheduleConstraints
+Response: {
+  valid: boolean;
+  errors?: string[];
+}
+```
+
 ## Architecture
 
 ### Core Components
@@ -57,6 +77,7 @@ The main scheduling service that implements the `ISchedulerService` interface. K
 - Comprehensive constraint validation
 - Schedule optimization with sorting by constraint complexity
 - Performance monitoring and scaling analysis
+- Efficient blackout period handling with optimized lookups
 
 #### Key Types
 ```typescript
@@ -66,6 +87,11 @@ interface ScheduleConstraints {
     blackoutPeriods: BlackoutPeriod[];
     avoidConsecutivePeriods: boolean;
     maxConsecutivePeriods: number;
+}
+
+interface BlackoutPeriod {
+    date: string;    // ISO date string
+    period: number;  // 1-8
 }
 
 interface ScheduleEntry {
@@ -114,8 +140,10 @@ Real-world performance measurements show:
 #### Constraint Types and Implementation
 1. **Hard Constraints** (Must be satisfied)
    - Default class conflicts
-   - Blackout dates
-   - Period-specific blackouts
+   - Blackout periods:
+     - Individual period blackouts
+     - Full day blackouts
+     - Cross-day period blackouts
    - Maximum classes per day
    - Maximum classes per week
 
@@ -124,6 +152,54 @@ Real-world performance measurements show:
    - Schedule density
    - Gap minimization
    - Grade grouping
+
+#### Blackout Period Implementation
+The scheduler implements efficient blackout period handling:
+
+1. **Data Structure**
+```typescript
+// Optimized lookup structure for blackout periods
+private blackoutLookup: Map<string, Set<number>>;
+
+// Initialize lookup for efficient checking
+private initializeBlackoutLookup(): void {
+    this.blackoutLookup = new Map();
+    for (const blackout of this.constraints.blackoutPeriods) {
+        const key = blackout.date;
+        if (!this.blackoutLookup.has(key)) {
+            this.blackoutLookup.set(key, new Set());
+        }
+        this.blackoutLookup.get(key)!.add(blackout.period);
+    }
+}
+
+// Fast blackout checking
+private isBlackedOut(date: string, period: number): boolean {
+    const periods = this.blackoutLookup.get(date);
+    return periods ? periods.has(period) : false;
+}
+```
+
+2. **Validation**
+```typescript
+// Validate blackout periods during constraint updates
+private validateBlackoutPeriods(blackoutPeriods: BlackoutPeriod[]): boolean {
+    return blackoutPeriods.every(bp => {
+        const date = new Date(bp.date);
+        return (
+            date.getDay() !== 0 &&  // Not Sunday
+            date.getDay() !== 6 &&  // Not Saturday
+            bp.period >= 1 &&       // Valid period range
+            bp.period <= 8
+        );
+    });
+}
+```
+
+3. **Performance Optimization**
+- O(1) lookup for blackout checks
+- Efficient batch operations for full day blocks
+- Optimized validation for large sets of blackout periods
 
 ## Development Setup
 

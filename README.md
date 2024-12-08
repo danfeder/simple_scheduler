@@ -14,6 +14,7 @@ This project implements an automated class scheduling system for schools, capabl
 - ✅ Frontend class selection and display
 - ✅ Backend storage service with validation
 - ✅ Dependency updates and modernization
+- ✅ Visual blackout period management
 
 ### In Progress
 - 🔄 Schedule generation algorithm implementation
@@ -22,25 +23,31 @@ This project implements an automated class scheduling system for schools, capabl
 - 🔄 Quality metrics tracking
 
 ### Recent Updates
-1. **Manual Class Management** (Dec 7, 2023)
+1. **Blackout Period Management** (Current)
+   - Added visual calendar interface for managing blackout periods
+   - Implemented drag-select functionality for blocking multiple periods
+   - Added full day and cross-day period blocking
+   - Included undo/redo functionality for constraint changes
+
+2. **Manual Class Management** (Dec 7, 2023)
    - Added ability to manually create classes
    - Added class editing functionality
    - Improved class conflict management UI
    - Integrated with existing PDF import system
 
-2. **Major Dependency Updates** (Dec 7, 2023)
+3. **Major Dependency Updates** (Dec 7, 2023)
    - Updated Next.js to version 15
    - Updated React to version 18 (stable)
    - Updated backend dependencies including Express
    - Fixed security vulnerabilities
    - Improved TypeScript compatibility
 
-3. **PDF Import System**
+4. **PDF Import System**
    - Implemented PDF parsing with Python backend
    - Added error handling and validation
    - Integrated with frontend upload component
 
-4. **UI Improvements**
+5. **UI Improvements**
    - Added scrollable class dropdown
    - Improved class conflict visualization
    - Fixed TypeScript type issues
@@ -55,6 +62,11 @@ This project implements an automated class scheduling system for schools, capabl
   - Manually create new classes
   - Edit existing classes
   - Manage class conflicts visually
+- Constraint Management:
+  - Visual blackout period calendar
+  - Drag-select period blocking
+  - Full day and cross-day blocking
+  - Undo/redo capability
 - Constraint-based scheduling
 - Real-time schedule generation
 - Schedule optimization
@@ -147,6 +159,16 @@ The frontend will be available at http://localhost:3000
    - Use the conflict grid to toggle conflicts
    - Click on time slots to mark/unmark conflicts
 
+#### Constraint Management
+1. **Manage Blackout Periods**:
+   - Navigate to the Constraints section
+   - Use the calendar interface to:
+     - Click/drag to block individual periods
+     - Use top buttons to block full days
+     - Use side buttons to block periods across days
+   - Use undo/redo to review changes
+   - Save constraints when finished
+
 ### File Structure
 ```
 new-scheduler/
@@ -216,3 +238,8 @@ For detailed technical documentation about the backend implementation, please re
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Documentation
+- See [BLACKOUT_PERIODS.md](docs/BLACKOUT_PERIODS.md) for detailed documentation on blackout period functionality
+- See [INTEGRATION.md](docs/INTEGRATION.md) for integration details
+- See [TESTING.md](docs/TESTING.md) for testing guidelines

@@ -69,6 +69,8 @@ const importPDF = async (file: File) => {
 #### Current Implementation
 - Manages scheduling constraints in frontend state
 - Handles basic validation and UI updates
+- Visual calendar interface for blackout period management
+- Undo/redo functionality for constraint changes
 
 #### Integration Tasks
 1. Update constraint interface to match backend:
@@ -83,8 +85,8 @@ interface ScheduleConstraints {
 }
 
 interface BlackoutPeriod {
-  date: Date;
-  period: Period;
+  date: string;  // ISO date string
+  period: number;  // 1-8
 }
 ```
 
@@ -100,7 +102,7 @@ const saveConstraints = async () => {
   const constraints: ScheduleConstraints = {
     maxPeriodsPerDay,
     maxPeriodsPerWeek,
-    blackoutPeriods: parseBlackoutPeriods(personalBlackoutPeriods),
+    blackoutPeriods: parseBlackoutPeriods(blackoutPeriods),
     avoidConsecutivePeriods,
     maxConsecutivePeriods
   };
@@ -129,6 +131,12 @@ const saveConstraints = async () => {
   }
 };
 ```
+
+4. Blackout Period Management:
+- See detailed documentation in `BLACKOUT_PERIODS.md`
+- Implements visual calendar interface
+- Supports multiple blocking methods
+- Includes undo/redo functionality
 
 ### 3. Schedule Generator (`ScheduleGenerator.tsx`)
 #### Current Implementation

@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { constraintsApi } from '../lib/api';
 import { toast } from '@/components/ui/use-toast';
+import { BlackoutCalendar } from './BlackoutCalendar';
 
 interface Constraints {
   maxPeriodsPerWeek: number;
   maxPeriodsPerDay: number;
   maxConsecutivePeriods: number;
   avoidConsecutivePeriods: boolean;
-  blackoutPeriods: string[];
+  blackoutPeriods: { date: string; period: number }[];
 }
 
 const defaultConstraints: Constraints = {
@@ -25,10 +26,14 @@ const defaultConstraints: Constraints = {
   blackoutPeriods: [],
 };
 
+const periods = [1, 2, 3, 4, 5, 6, 7, 8];
+
 export function ConstraintManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [constraints, setConstraints] = useState<Constraints>(defaultConstraints);
+  const [history, setHistory] = useState<Constraints[]>([defaultConstraints]);
+  const [historyIndex, setHistoryIndex] = useState(0);
 
   useEffect(() => {
     loadConstraints();
@@ -83,13 +88,91 @@ export function ConstraintManager() {
     }
   };
 
-  const handleBlackoutPeriodsChange = (value: string) => {
-    // Parse the input string into an array of blackout periods
-    const periods = value.split(',').map(p => p.trim()).filter(Boolean);
-    setConstraints(prev => ({
-      ...prev,
-      blackoutPeriods: periods,
-    }));
+  const addToHistory = (newConstraints: Constraints) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newConstraints);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  const undo = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1);
+      setConstraints(history[historyIndex - 1]);
+    }
+  };
+
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(historyIndex + 1);
+      setConstraints(history[historyIndex + 1]);
+    }
+  };
+
+  const toggleBlackoutPeriod = (date: string, period: number) => {
+    const newConstraints = { ...constraints };
+    const existingIndex = newConstraints.blackoutPeriods.findIndex(
+      bp => bp.date === date && bp.period === period
+    );
+
+    if (existingIndex > -1) {
+      newConstraints.blackoutPeriods.splice(existingIndex, 1);
+    } else {
+      newConstraints.blackoutPeriods.push({ date, period });
+    }
+
+    setConstraints(newConstraints);
+    addToHistory(newConstraints);
+  };
+
+  const toggleFullDay = (date: string) => {
+    const newConstraints = { ...constraints };
+    const isFullDayBlackedOut = periods.every((period: number) =>
+      constraints.blackoutPeriods.some(bp => bp.date === date && bp.period === period)
+    );
+
+    if (isFullDayBlackedOut) {
+      // Remove all periods for this day
+      newConstraints.blackoutPeriods = constraints.blackoutPeriods.filter(bp => bp.date !== date);
+    } else {
+      // Add all periods for this day
+      const periodsToAdd = periods
+        .filter((period: number) => !constraints.blackoutPeriods.some(bp => bp.date === date && bp.period === period))
+        .map((period: number) => ({ date, period }));
+      newConstraints.blackoutPeriods = [...constraints.blackoutPeriods, ...periodsToAdd];
+    }
+
+    setConstraints(newConstraints);
+    addToHistory(newConstraints);
+  };
+
+  const togglePeriodForWeek = (period: number, weekStart: Date) => {
+    const weekDates = Array.from({ length: 5 }, (_, i) => {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      return date.toISOString().split('T')[0];
+    });
+
+    const allPeriodsForWeekExist = weekDates.every(date =>
+      constraints.blackoutPeriods.some(bp => bp.date === date && bp.period === period)
+    );
+
+    const newConstraints = { ...constraints };
+    if (allPeriodsForWeekExist) {
+      // Remove all instances of this period for the week
+      newConstraints.blackoutPeriods = constraints.blackoutPeriods.filter(
+        bp => !weekDates.includes(bp.date) || bp.period !== period
+      );
+    } else {
+      // Add this period for all days in the week that don't already have it
+      const periodsToAdd = weekDates
+        .filter(date => !constraints.blackoutPeriods.some(bp => bp.date === date && bp.period === period))
+        .map(date => ({ date, period }));
+      newConstraints.blackoutPeriods = [...constraints.blackoutPeriods, ...periodsToAdd];
+    }
+
+    setConstraints(newConstraints);
+    addToHistory(newConstraints);
   };
 
   if (loading) {
@@ -167,16 +250,31 @@ export function ConstraintManager() {
             </Label>
           </div>
           <div>
-            <Label htmlFor="blackoutPeriods">Blackout Periods</Label>
-            <Input
-              id="blackoutPeriods"
-              placeholder="e.g., Monday 1-3, Tuesday 4"
-              value={constraints.blackoutPeriods.join(', ')}
-              onChange={(e) => handleBlackoutPeriodsChange(e.target.value)}
+            <Label>Blackout Periods</Label>
+            <div className="flex gap-2 mb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={undo}
+                disabled={historyIndex === 0}
+              >
+                Undo
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={redo}
+                disabled={historyIndex === history.length - 1}
+              >
+                Redo
+              </Button>
+            </div>
+            <BlackoutCalendar
+              blackoutPeriods={constraints.blackoutPeriods}
+              onToggleBlackout={toggleBlackoutPeriod}
+              onToggleFullDay={toggleFullDay}
+              onTogglePeriodForWeek={togglePeriodForWeek}
             />
-            <p className="text-sm text-gray-500 mt-1">
-              Enter periods as "Day Period" or "Day Period-Period" separated by commas
-            </p>
           </div>
           <Button 
             onClick={saveConstraints} 

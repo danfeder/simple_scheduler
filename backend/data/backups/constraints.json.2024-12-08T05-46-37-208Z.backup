@@ -1,0 +1,7 @@
+{
+  "maxPeriodsPerDay": 8,
+  "maxPeriodsPerWeek": 40,
+  "maxConsecutivePeriods": 3,
+  "avoidConsecutivePeriods": true,
+  "blackoutPeriods": []
+}
