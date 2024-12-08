@@ -200,7 +200,7 @@ export function ConstraintManager() {
               id="maxPeriodsPerWeek"
               type="number"
               value={constraints.maxPeriodsPerWeek}
-              onChange={(e) => setConstraints(prev => ({
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConstraints(prev => ({
                 ...prev,
                 maxPeriodsPerWeek: Number(e.target.value),
               }))}
@@ -214,7 +214,7 @@ export function ConstraintManager() {
               id="maxPeriodsPerDay"
               type="number"
               value={constraints.maxPeriodsPerDay}
-              onChange={(e) => setConstraints(prev => ({
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConstraints(prev => ({
                 ...prev,
                 maxPeriodsPerDay: Number(e.target.value),
               }))}
@@ -228,7 +228,7 @@ export function ConstraintManager() {
               id="maxConsecutivePeriods"
               type="number"
               value={constraints.maxConsecutivePeriods}
-              onChange={(e) => setConstraints(prev => ({
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConstraints(prev => ({
                 ...prev,
                 maxConsecutivePeriods: Number(e.target.value),
               }))}
@@ -240,7 +240,7 @@ export function ConstraintManager() {
             <Switch
               id="avoidConsecutivePeriods"
               checked={constraints.avoidConsecutivePeriods}
-              onCheckedChange={(checked) => setConstraints(prev => ({
+              onCheckedChange={(checked: boolean) => setConstraints(prev => ({
                 ...prev,
                 avoidConsecutivePeriods: checked,
               }))}

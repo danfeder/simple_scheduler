@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./app/*"],
+      "@/components/ui/*": ["./app/components/__mocks__/ui/*"],
+      "shared/*": ["../shared/*"]
+    },
+    "types": ["jest", "@testing-library/jest-dom"],
+    "isolatedModules": false,
+    "allowJs": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "jest.setup.js",
+    "app/components/__mocks__/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+} 
