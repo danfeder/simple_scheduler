@@ -20,6 +20,39 @@ export interface ScheduleEntry {
   period: Period;
 }
 
+// Scheduled class type
+export interface ScheduledClass {
+  id: string;
+  name: string;
+  startTime: Date;
+  endTime: Date;
+  dayOfWeek: number;
+  period: number;
+  originalDayOfWeek?: number;
+  originalPeriod?: number;
+  conflicts: Array<{ dayOfWeek: number; period: number }>;
+  isInConflict?: boolean;
+  room?: string;
+}
+
+// Schedule type
+export interface Schedule {
+  classes: ScheduledClass[]
+  metadata: {
+    generatedAt: Date
+    version: string
+    totalWeeks: number
+  }
+  quality: {
+    totalScore: number
+    metrics: {
+      dayDistribution: number
+      timeGaps: number
+      periodUtilization: number
+    }
+  }
+}
+
 // Rotation type
 export interface Rotation {
   id?: string;

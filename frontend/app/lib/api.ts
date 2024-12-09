@@ -126,4 +126,40 @@ export const scheduleApi = {
     if (!response.ok) throw new Error('Failed to fetch status');
     return response.json();
   },
+
+  updateClass: async (scheduleId: string, classId: string, updates: { dayOfWeek: number; period: number }) => {
+    const response = await fetch(`${API_BASE_URL}/schedule/${scheduleId}/class/${classId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    if (!response.ok) throw new Error('Failed to update class schedule');
+    return response.json();
+  },
+
+  checkConflicts: async (scheduleId: string, classId: string, dayOfWeek: number, period: number) => {
+    const response = await fetch(
+      `${API_BASE_URL}/schedule/${scheduleId}/conflicts?classId=${classId}&dayOfWeek=${dayOfWeek}&period=${period}`
+    );
+    if (!response.ok) throw new Error('Failed to check conflicts');
+    return response.json();
+  },
+
+  unscheduleClass: async (scheduleId: string, classId: string) => {
+    const response = await fetch(`${API_BASE_URL}/schedule/${scheduleId}/class/${classId}/unschedule`, {
+      method: 'POST',
+    });
+    if (!response.ok) throw new Error('Failed to unschedule class');
+    return response.json();
+  },
+
+  rescheduleClass: async (scheduleId: string, classId: string, original: { dayOfWeek: number; period: number }) => {
+    const response = await fetch(`${API_BASE_URL}/schedule/${scheduleId}/class/${classId}/reschedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(original),
+    });
+    if (!response.ok) throw new Error('Failed to reschedule class');
+    return response.json();
+  },
 }; 
