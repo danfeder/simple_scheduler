@@ -1,5 +1,5 @@
 import { SchedulerService } from './services/scheduler/schedulerService';
-import { SchedulerOptimizer } from './services/schedulerOptimizer';
+import { SchedulerOptimizer } from './services/scheduler/optimizer';
 import { ClassDataConverter } from './services/classDataConverter';
 import { ScheduleConstraints } from './services/scheduler/types';
 import * as fs from 'fs';

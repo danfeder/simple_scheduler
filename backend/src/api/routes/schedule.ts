@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { StorageService } from '../../services/storage';
-import { SchedulerService } from '../../services/scheduler.service';
-import { SchedulerOptimizer } from '../../services/schedulerOptimizer';
+import { SchedulerService } from '../../services/scheduler';
+import { SchedulerOptimizer } from '../../services/scheduler/optimizer';
 import { v4 as uuidv4 } from 'uuid';
 import { Rotation, ScheduleEntry, Class } from 'shared/types';
 

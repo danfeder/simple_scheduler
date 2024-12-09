@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload } from 'lucide-react';
 import { classesApi } from '../lib/api';
 import { toast } from '@/components/ui/use-toast';
-import { Class, Conflict, GradeLevel } from '../../../shared/types';
+import { Class, Conflict, GradeLevel } from 'shared/types';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const periods = [1, 2, 3, 4, 5, 6, 7, 8];

@@ -1,5 +1,5 @@
-import { SchedulerService } from './scheduler/schedulerService';
-import { Schedule, ScheduleQuality } from './scheduler/types';
+import { SchedulerService } from './schedulerService';
+import { Schedule, ScheduleQuality } from './types';
 
 export class SchedulerOptimizer {
     private startDate: Date;

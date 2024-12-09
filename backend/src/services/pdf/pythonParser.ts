@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { Class, GradeLevel, Conflict, DayOfWeek } from 'shared/types';
 import fs from 'fs';
-import { StorageService } from './storage';
+import { StorageService } from '../storage';
 
 export class PythonPdfParser {
   private storage: StorageService;

@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { SchedulerService } from '../services/scheduler.service';
+import { SchedulerService } from '../../services/scheduler/schedulerService';
 import { ScheduleConstraints, Class, Period, ScheduleEntry } from '../../../shared/types';
 
 describe('Blackout Period Functionality', () => {

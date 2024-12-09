@@ -1,6 +1,18 @@
 import { Period } from './base';
 import { AdditionalConflict } from './class';
 
+// Schedule constraints type
+export interface ScheduleConstraints {
+  maxPeriodsPerDay: number;
+  maxPeriodsPerWeek: number;
+  maxConsecutivePeriods: number;
+  avoidConsecutivePeriods: boolean;
+  blackoutPeriods: Array<{
+    date: Date;
+    period: Period;
+  }>;
+}
+
 // Schedule entry type
 export interface ScheduleEntry {
   classId: string;

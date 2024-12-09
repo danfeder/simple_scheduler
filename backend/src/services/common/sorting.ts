@@ -33,4 +33,10 @@ export class SortingService {
     // In the future, we can add more sorting strategies here
     return new SortingService();
   }
-} 
+}
+
+// Export a convenience function for sorting by constraints
+export const sortByConstraints = (classes: Class[]): Class[] => {
+  const sorter = SortingService.createSortingStrategy();
+  return sorter.sortClassesByConstraints(classes);
+}; 

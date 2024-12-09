@@ -1,5 +1,5 @@
-import { Class, Rotation } from 'shared/types';
-import { Logger } from '../common/logging';
+import { Class, Rotation, ScheduleConstraints } from 'shared/types';
+import { LoggingService } from '../common/logging';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
@@ -12,7 +12,7 @@ export class StorageService {
   private backupDir: string;
 
   constructor() {
-    const rootDir = path.resolve(__dirname, '../..');
+    const rootDir = path.resolve(__dirname, '../../..');
     this.dataDir = path.join(rootDir, 'data');
     this.backupDir = path.join(this.dataDir, 'backups');
     this.classesFile = path.join(this.dataDir, 'classes.json');

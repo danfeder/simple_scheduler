@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { PythonPdfParser } from './pythonPdfParser';
+import { PythonPdfParser } from './pythonParser';
 
 export interface ValidationResult {
   isValid: boolean;

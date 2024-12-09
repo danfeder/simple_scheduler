@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { StorageService } from '../../services/storage';
-import { PythonPdfParser } from '../../services/pythonPdfParser';
-import { validatePdfSchedule } from '../../services/validatePdf';
+import { PythonPdfParser } from '../../services/pdf/pythonParser';
+import { validatePdfSchedule } from '../../services/pdf/validator';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
