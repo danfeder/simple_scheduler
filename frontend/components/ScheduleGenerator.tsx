@@ -12,6 +12,36 @@ import { Schedule, ScheduledClass } from "@/types/schedule";
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+// Create simple Progress and Badge components if not available
+const Progress = ({ value }: { value: number }) => (
+  <div className="w-full bg-gray-200 rounded-full h-2.5">
+    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${value}%` }} />
+  </div>
+);
+
+const Badge = ({ children, variant }: { children: React.ReactNode; variant: 'success' | 'warning' }) => (
+  <span className={`px-2 py-1 rounded-full text-sm ${
+    variant === 'success' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+  }`}>
+    {children}
+  </span>
+);
+
+interface RotationEntry {
+  classId: string;
+  assignedDate: string;
+  period: number;
+}
+
+interface OptimizationMetrics {
+  totalScore: number;
+  dayDistribution: number;
+  timeGaps: number;
+  periodUtilization: number;
+  weekCount: number;
+  weekDistribution: number;
+}
+
 export function ScheduleGenerator() {
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [generatedSchedule, setGeneratedSchedule] = useState<Schedule | null>(null);
@@ -19,6 +49,8 @@ export function ScheduleGenerator() {
   const [generating, setGenerating] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState<Date | null>(null);
   const [draggedClass, setDraggedClass] = useState<ScheduledClass | null>(null);
+  const [optimizing, setOptimizing] = useState(false);
+  const [optimizationMetrics, setOptimizationMetrics] = useState<OptimizationMetrics | null>(null);
 
   const generateSchedule = async () => {
     if (!startDate) {
@@ -32,44 +64,44 @@ export function ScheduleGenerator() {
 
     try {
       setGenerating(true);
-      const { scheduleId } = await scheduleApi.generate(startDate);
+      console.log('Generating schedule for date:', startDate);
+      const rotation = await scheduleApi.generate(startDate);
       
-      // Start polling for status
-      const checkStatus = async () => {
-        const status = await scheduleApi.getStatus(scheduleId);
-        
-        if (status.state === 'completed') {
-          const schedule = await scheduleApi.get(scheduleId);
-          setGeneratedSchedule(schedule);
-          console.log("Generated Schedule:", schedule);
-          setUnscheduledClasses(schedule.classes.filter(c => c.dayOfWeek === 0));
-          setCurrentWeekStart(getWeekStart(startDate));
-          setGenerating(false);
-          toast({
-            title: "Success",
-            description: "Schedule generated successfully",
-          });
-        } else if (status.state === 'failed') {
-          setGenerating(false);
-          toast({
-            title: "Error",
-            description: status.error || "Failed to generate schedule",
-            variant: "destructive",
-          });
-        } else {
-          // Continue polling if still in progress
-          setTimeout(checkStatus, 2000);
+      // Transform rotation into schedule format
+      const schedule: Schedule = {
+        classes: rotation.schedule.map((entry: RotationEntry) => ({
+          id: entry.classId,
+          name: `Class ${entry.classId}`,
+          startTime: new Date(entry.assignedDate),
+          endTime: new Date(entry.assignedDate),
+          dayOfWeek: new Date(entry.assignedDate).getDay(),
+          period: entry.period
+        })),
+        metadata: {
+          generatedAt: new Date(),
+          version: rotation.id,
+          qualityScore: 0,
+          totalWeeks: calculateTotalWeeks(rotation.schedule)
         }
       };
-
-      checkStatus();
+      
+      setGeneratedSchedule(schedule);
+      setUnscheduledClasses(schedule.classes.filter((c: ScheduledClass) => c.dayOfWeek === 0));
+      setCurrentWeekStart(getWeekStart(startDate));
+      
+      toast({
+        title: "Success",
+        description: "Schedule generated successfully",
+      });
     } catch (error) {
-      setGenerating(false);
+      console.error('Schedule generation error:', error);
       toast({
         title: "Error",
-        description: "Failed to start schedule generation",
+        description: error instanceof Error ? error.message : "Failed to generate schedule",
         variant: "destructive",
       });
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -77,22 +109,35 @@ export function ScheduleGenerator() {
     if (!generatedSchedule) return;
 
     try {
-      setGenerating(true);
-      const optimizedSchedule = await scheduleApi.optimize(generatedSchedule.metadata.version);
-      setGeneratedSchedule(optimizedSchedule);
-      setUnscheduledClasses(optimizedSchedule.classes.filter(c => c.dayOfWeek === 0));
+      setOptimizing(true);
+      const result = await scheduleApi.optimize(generatedSchedule.metadata.version);
+      
+      setGeneratedSchedule({
+        ...result.rotation,
+        metadata: {
+          generatedAt: new Date(),
+          version: result.rotation.id,
+          qualityScore: result.optimizationResult.score.totalScore
+        }
+      });
+      
+      setOptimizationMetrics({
+        totalScore: result.optimizationResult.score.totalScore,
+        ...result.optimizationResult.score.metrics
+      });
+
       toast({
         title: "Success",
-        description: "Schedule optimized successfully",
+        description: `Schedule optimized successfully (Score: ${(result.optimizationResult.score.totalScore * 100).toFixed(1)}%)`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to optimize schedule",
+        description: error instanceof Error ? error.message : "Failed to optimize schedule",
         variant: "destructive",
       });
     } finally {
-      setGenerating(false);
+      setOptimizing(false);
     }
   };
 
@@ -167,6 +212,61 @@ export function ScheduleGenerator() {
     }
   };
 
+  const calculateTotalWeeks = (schedule: RotationEntry[]): number => {
+    if (schedule.length === 0) return 0;
+    
+    const dates = schedule.map(entry => new Date(entry.assignedDate));
+    const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+    const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+    
+    const diffTime = Math.abs(maxDate.getTime() - minDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.ceil(diffDays / 7);
+  };
+
+  const renderOptimizationMetrics = () => {
+    if (!optimizationMetrics) return null;
+
+    return (
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Optimization Metrics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between mb-2">
+                <span>Overall Quality</span>
+                <Badge variant={optimizationMetrics.totalScore > 0.8 ? "success" : "warning"}>
+                  {(optimizationMetrics.totalScore * 100).toFixed(1)}%
+                </Badge>
+              </div>
+              <Progress value={optimizationMetrics.totalScore * 100} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-sm text-muted-foreground">Day Distribution</span>
+                <Progress value={optimizationMetrics.dayDistribution * 100} className="h-2" />
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Time Gaps</span>
+                <Progress value={optimizationMetrics.timeGaps * 100} className="h-2" />
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Period Utilization</span>
+                <Progress value={optimizationMetrics.periodUtilization * 100} className="h-2" />
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Week Distribution</span>
+                <Progress value={optimizationMetrics.weekDistribution * 100} className="h-2" />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
       <div className="space-y-6">
@@ -195,13 +295,14 @@ export function ScheduleGenerator() {
               {generatedSchedule && (
                 <Button 
                   onClick={optimizeSchedule}
-                  disabled={generating}
+                  disabled={optimizing}
                   variant="outline"
                 >
-                  Optimize Schedule
+                  {optimizing ? 'Optimizing...' : 'Optimize Schedule'}
                 </Button>
               )}
             </div>
+            {optimizationMetrics && renderOptimizationMetrics()}
           </CardContent>
         </Card>
 

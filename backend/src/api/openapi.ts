@@ -202,6 +202,93 @@ export const openApiSpec: OpenAPIV3.Document = {
           }
         }
       }
+    },
+    '/rotations/{id}/optimize': {
+      post: {
+        summary: 'Optimize an existing rotation schedule',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' }
+          }
+        ],
+        requestBody: {
+          required: false,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  maxTimeSeconds: {
+                    type: 'integer',
+                    minimum: 1,
+                    maximum: 300,
+                    default: 30,
+                    description: 'Maximum time in seconds to spend optimizing'
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Optimized schedule with quality metrics',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    rotation: { $ref: '#/components/schemas/Rotation' },
+                    optimizationResult: {
+                      type: 'object',
+                      properties: {
+                        score: {
+                          type: 'object',
+                          properties: {
+                            totalScore: { type: 'number' },
+                            metrics: {
+                              type: 'object',
+                              properties: {
+                                dayDistribution: { type: 'number' },
+                                timeGaps: { type: 'number' },
+                                periodUtilization: { type: 'number' },
+                                weekCount: { type: 'number' },
+                                weekDistribution: { type: 'number' }
+                              }
+                            }
+                          }
+                        },
+                        weeksUsed: { type: 'integer' },
+                        timeElapsed: { type: 'number' },
+                        message: { type: 'string' }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '404': {
+            description: 'Rotation not found',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' }
+              }
+            }
+          },
+          '500': {
+            description: 'Optimization failed',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }; 

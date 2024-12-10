@@ -1,12 +1,15 @@
 import { Class, ScheduleConstraints, ScheduleEntry, Period, DayOfWeek } from 'shared/types';
 import { SlotFinder } from './slotFinder';
 import { SchedulerOptimizer } from './optimizer';
+import { MultiWeekOptimizer } from './multiWeekOptimizer';
 import { sortByConstraints } from '../common/sorting';
+import { OptimizationResult, Schedule, ScheduledClass } from './types';
 
 export class SchedulerService {
   private classes: Map<string, Class> = new Map();
   private constraints: ScheduleConstraints;
   private schedule: ScheduleEntry[] = [];
+  private optimizer: MultiWeekOptimizer | null = null;
 
   constructor(constraints: ScheduleConstraints) {
     this.constraints = constraints;
@@ -156,14 +159,38 @@ export class SchedulerService {
     const maxWeeksToLookAhead = 10;
 
     while (weeksSearched < maxWeeksToLookAhead) {
-      // Try each day in the current week
-      for (let dayOffset = 0; dayOffset < 5; dayOffset++) {
-        const candidateDate = new Date(date);
-        candidateDate.setDate(candidateDate.getDate() + dayOffset);
+      // Get current distribution for this week
+      const weekStart = new Date(date);
+      const weekEnd = new Date(date);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      
+      const classesPerDay = new Map<number, number>();
+      this.schedule.forEach(entry => {
+        const entryDate = new Date(entry.assignedDate);
+        if (entryDate >= weekStart && entryDate < weekEnd) {
+          const dayOfWeek = ((entryDate.getDay() + 6) % 7) + 1; // Convert to 1-5 for Mon-Fri
+          classesPerDay.set(dayOfWeek, (classesPerDay.get(dayOfWeek) || 0) + 1);
+        }
+      });
+
+      // Sort days by how many classes they have (prefer days with fewer classes)
+      const dayOrder = Array.from({ length: 5 }, (_, i) => i + 1)
+        .sort((a, b) => (classesPerDay.get(a) || 0) - (classesPerDay.get(b) || 0));
+
+      // Try each day in order of least used to most used
+      for (const dayOffset of dayOrder) {
+        const candidateDate = new Date(weekStart);
+        candidateDate.setDate(candidateDate.getDate() + (dayOffset - 1));
         
         // Skip weekends
         const dayOfWeek = candidateDate.getDay();
         if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+
+        // Count classes already scheduled for this day
+        const classesThisDay = (classesPerDay.get(((dayOfWeek + 6) % 7) + 1) || 0);
+        
+        // Skip if this day already has max classes
+        if (classesThisDay >= this.constraints.maxPeriodsPerDay) continue;
 
         // Try each period in this day
         for (let period = 1; period <= 8; period++) {
@@ -235,11 +262,112 @@ export class SchedulerService {
     return true;
   }
 
-  getSchedule(): ScheduleEntry[] {
-    return this.schedule;
+  async optimizeSchedule(startDate: Date, maxTimeSeconds: number = 30): Promise<OptimizationResult> {
+    console.group('Schedule Optimization');
+    const totalStartTime = performance.now();
+
+    try {
+      console.log(`Parameters: startDate=${startDate}, maxTimeSeconds=${maxTimeSeconds}`);
+      console.log(`Current schedule has ${this.schedule.length} entries`);
+      console.log(`Constraints:`, this.constraints);
+
+      // Convert ScheduleEntry[] to Schedule format
+      console.group('Schedule Conversion');
+      const conversionStart = performance.now();
+      
+      console.log('Converting schedule entries to scheduled classes...');
+      const scheduledClasses: ScheduledClass[] = this.schedule.map(entry => {
+        const cls = this.classes.get(entry.classId);
+        if (!cls) {
+          console.error(`Class not found for entry:`, entry);
+          throw new Error(`Class not found: ${entry.classId}`);
+        }
+
+        const date = new Date(entry.assignedDate);
+        const scheduledClass = {
+          id: entry.classId,
+          name: cls.classNumber,
+          startTime: date,
+          endTime: new Date(date.getTime() + 45 * 60 * 1000), // 45 minute classes
+          dayOfWeek: ((date.getDay() + 6) % 7) + 1, // Convert to 1-5 for Mon-Fri
+          period: entry.period,
+          conflicts: [],
+          isInConflict: false
+        };
+        return scheduledClass;
+      });
+
+      console.log(`Creating schedule object with ${scheduledClasses.length} classes`);
+      const schedule: Schedule = {
+        classes: scheduledClasses,
+        metadata: {
+          generatedAt: new Date(),
+          version: 'v1',
+          totalWeeks: Math.ceil(this.schedule.length / (this.constraints.maxPeriodsPerWeek || 15))
+        }
+      };
+      console.log('Schedule metadata:', schedule.metadata);
+      console.log(`Schedule conversion took ${(performance.now() - conversionStart).toFixed(2)}ms`);
+      console.groupEnd();
+
+      // Initialize optimizer if needed
+      console.group('Optimizer Initialization');
+      const initStart = performance.now();
+      
+      if (!this.optimizer) {
+        console.log('Creating new MultiWeekOptimizer');
+        this.optimizer = new MultiWeekOptimizer(this, startDate, maxTimeSeconds);
+      } else {
+        console.log('Reusing existing MultiWeekOptimizer');
+      }
+      
+      console.log(`Initialization took ${(performance.now() - initStart).toFixed(2)}ms`);
+      console.groupEnd();
+
+      // Run optimization
+      console.group('Optimization Process');
+      const optimizationStart = performance.now();
+      
+      console.log(`Starting optimization with ${this.classes.size} total classes`);
+      const result = await this.optimizer.optimizeMultiWeek(
+        Array.from(this.classes.values()), 
+        this.constraints
+      );
+
+      console.log('Optimization results:', {
+        success: !!result.schedule,
+        score: result.score,
+        weeksUsed: result.weeksUsed,
+        timeElapsed: result.timeElapsed
+      });
+      
+      console.log(`Optimization process took ${(performance.now() - optimizationStart).toFixed(2)}ms`);
+      console.groupEnd();
+
+      const totalTime = performance.now() - totalStartTime;
+      console.log(`\nTotal optimization time: ${totalTime.toFixed(2)}ms`);
+
+      return result;
+    } catch (error) {
+      console.group('Optimization Error');
+      console.error('Error details:', error);
+      console.error('Current state:', {
+        scheduleLength: this.schedule.length,
+        classesCount: this.classes.size,
+        constraints: this.constraints
+      });
+      console.groupEnd();
+      throw error;
+    } finally {
+      console.groupEnd(); // Schedule Optimization
+    }
   }
 
   getClasses(): Map<string, Class> {
     return this.classes;
+  }
+
+  getSchedule(): ScheduleEntry[] {
+    return this.schedule;
   }
 } 

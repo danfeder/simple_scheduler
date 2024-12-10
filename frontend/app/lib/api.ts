@@ -92,18 +92,33 @@ export const constraintsApi = {
 // Schedule API
 import { Schedule, ScheduleConstraints } from '../../../shared/types/schedule';
 
+interface Rotation {
+  id: string;
+  startDate: string;
+  schedule: Array<{
+    classId: string;
+    assignedDate: string;
+    period: number;
+  }>;
+  status: 'draft' | 'active' | 'completed';
+  additionalConflicts: any[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const scheduleApi = {
-  generate: async (startDate: Date, constraints: ScheduleConstraints): Promise<Rotation> => {
+  generate: async (startDate: Date): Promise<Rotation> => {
     const response = await fetch('/api/schedule/generate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ startDate, constraints }),
+      body: JSON.stringify({ startDate: startDate.toISOString() }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to generate schedule');
+      const errorData = await response.json();
+      throw new Error(errorData.details || 'Failed to generate schedule');
     }
 
     return response.json();
@@ -121,13 +136,18 @@ export const scheduleApi = {
     return response.json();
   },
 
-  optimize: async (version: string): Promise<Schedule> => {
-    const response = await fetch(`/api/schedule/${version}/optimize`, {
+  optimize: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/schedule/${id}/optimize`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ maxTimeSeconds: 30 }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to optimize schedule');
+      const errorData = await response.json();
+      throw new Error(errorData.details || 'Failed to optimize schedule');
     }
 
     return response.json();
