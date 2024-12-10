@@ -14,7 +14,12 @@ const periods = Array.from({ length: 8 }, (_, i) => i + 1);
 
 export default function WeeklySchedule({ classes, onClassMove }: WeeklyScheduleProps) {
   const getClassForSlot = (dayOfWeek: number, period: number) => {
-    return classes.find(c => c.dayOfWeek === dayOfWeek && c.period === period);
+    const foundClass = classes.find(c => {
+      const classDayOfWeek = c.dayOfWeek;
+      return classDayOfWeek === dayOfWeek && c.period === period;
+    });
+    console.log(`Looking for class in day ${dayOfWeek}, period ${period}:`, foundClass);
+    return foundClass;
   };
 
   return (
@@ -39,7 +44,12 @@ export default function WeeklySchedule({ classes, onClassMove }: WeeklyScheduleP
 
                 return (
                   <td key={dayIndex} className="border p-2 min-w-[200px] h-[100px]">
-                    <Droppable droppableId={droppableId}>
+                    <Droppable 
+                      droppableId={droppableId}
+                      isDropDisabled={false}
+                      isCombineEnabled={false}
+                      ignoreContainerClipping={false}
+                    >
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
@@ -66,9 +76,6 @@ export default function WeeklySchedule({ classes, onClassMove }: WeeklyScheduleP
                                   `}
                                 >
                                   <div className="font-medium text-sm">{classInSlot.name}</div>
-                                  {classInSlot.room && (
-                                    <div className="text-sm text-gray-500">Room: {classInSlot.room}</div>
-                                  )}
                                 </Card>
                               )}
                             </Draggable>

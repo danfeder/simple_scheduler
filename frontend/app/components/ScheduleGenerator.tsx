@@ -5,13 +5,40 @@ import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { scheduleApi } from '../lib/api';
+import { scheduleApi, classesApi, constraintsApi } from '../lib/api';
 import { toast } from '@/components/ui/use-toast';
 import { Schedule, ScheduledClass } from '../../../shared/types/schedule';
 import WeeklySchedule from './WeeklySchedule';
 import UnscheduledClasses from './UnscheduledClasses';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+
+// Define types for the rotation response
+interface ScheduleEntry {
+  classId: string;
+  assignedDate: string;
+  period: number;
+}
+
+interface Rotation {
+  id: string;
+  startDate: string;
+  status: 'draft' | 'active' | 'completed';
+  schedule: ScheduleEntry[];
+  additionalConflicts: any[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ClassDetails {
+  id: string;
+  classNumber: string;
+  name?: string;
+  room?: string;
+  grade: string;
+  defaultConflicts: any[];
+  active: boolean;
+}
 
 export function ScheduleGenerator() {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -22,7 +49,7 @@ export function ScheduleGenerator() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (schedule) {
+    if (schedule && schedule.classes) {
       setUnscheduledClasses(schedule.classes.filter(c => c.dayOfWeek === 0));
     }
   }, [schedule]);
@@ -47,48 +74,82 @@ export function ScheduleGenerator() {
 
     try {
       setGenerating(true);
-      const { scheduleId } = await scheduleApi.generate(startDate);
+      console.log('Generating schedule for date:', startDate);
       
-      // Start polling for status
-      const interval = setInterval(async () => {
-        try {
-          const status = await scheduleApi.getStatus(scheduleId);
-          
-          if (status.state === 'completed') {
-            const newSchedule = await scheduleApi.get(scheduleId);
-            setSchedule(newSchedule);
-            clearInterval(interval);
-            setGenerating(false);
-            toast({
-              title: 'Success',
-              description: 'Schedule generated successfully',
-            });
-          } else if (status.state === 'failed') {
-            clearInterval(interval);
-            setGenerating(false);
-            toast({
-              title: 'Error',
-              description: status.error || 'Failed to generate schedule',
-              variant: 'destructive',
-            });
-          }
-        } catch (error) {
-          clearInterval(interval);
-          setGenerating(false);
-          toast({
-            title: 'Error',
-            description: 'Failed to check generation status',
-            variant: 'destructive',
-          });
-        }
-      }, 2000);
+      // Fetch saved constraints
+      const constraints = await constraintsApi.get();
+      console.log('Using constraints:', constraints);
+      
+      const rotation = await scheduleApi.generate(startDate, constraints);
+      console.log('Received rotation:', rotation);
+      
+      if (!rotation || !rotation.schedule) {
+        throw new Error('Invalid response from server');
+      }
 
-      setPollInterval(interval);
+      // Fetch all classes to get their details
+      console.log('Fetching class details...');
+      const allClasses = await classesApi.getAll() as ClassDetails[];
+      console.log('Received classes:', allClasses);
+      
+      // Transform schedule entries into ScheduledClass objects
+      console.log('Transforming schedule entries...');
+      const scheduledClasses = rotation.schedule.map((entry: ScheduleEntry) => {
+        const classDetails = allClasses.find((c: ClassDetails) => c.id === entry.classId);
+        if (!classDetails) {
+          console.warn(`Class details not found for ID: ${entry.classId}`);
+          return null;
+        }
+        console.log('Found class details:', classDetails);
+
+        const scheduledClass: ScheduledClass = {
+          id: classDetails.id,
+          name: classDetails.classNumber,
+          startTime: entry.assignedDate,
+          endTime: entry.assignedDate,
+          dayOfWeek: ((new Date(entry.assignedDate).getDay() + 6) % 7) + 1,
+          period: entry.period,
+          conflicts: [],
+          isInConflict: false
+        };
+        console.log('Created scheduled class:', scheduledClass);
+        return scheduledClass;
+      }).filter(Boolean) as ScheduledClass[];
+
+      console.log('Final scheduled classes:', scheduledClasses);
+
+      // Create Schedule object
+      const schedule: Schedule = {
+        classes: scheduledClasses,
+        metadata: {
+          generatedAt: rotation.createdAt || new Date(),
+          version: rotation.id || 'draft',
+          totalWeeks: 1
+        },
+        quality: {
+          totalScore: 0,
+          metrics: {
+            dayDistribution: 0,
+            timeGaps: 0,
+            periodUtilization: 0
+          }
+        }
+      };
+      console.log('Setting new schedule:', schedule);
+      setSchedule(schedule);
+
+      setGenerating(false);
+      toast({
+        title: 'Success',
+        description: 'Schedule generated successfully',
+      });
+
     } catch (error) {
+      console.error('Schedule generation error:', error);
       setGenerating(false);
       toast({
         title: 'Error',
-        description: 'Failed to start schedule generation',
+        description: error instanceof Error ? error.message : 'Failed to start schedule generation',
         variant: 'destructive',
       });
     }
@@ -117,41 +178,22 @@ export function ScheduleGenerator() {
   };
 
   const handleDragEnd = async (result: DropResult) => {
-    const { destination, source, draggableId } = result;
-    if (!destination || !schedule) return;
+    if (!result.destination || !schedule) return;
 
-    console.log('=== Drag Operation Started ===');
-    console.log('Source:', source.droppableId);
-    console.log('Destination:', destination.droppableId);
-    console.log('Class ID:', draggableId);
-
-    const parseDropId = (dropId: string) => {
-      const [dayStr, periodStr] = dropId.split('-');
-      const result = {
-        day: parseInt(dayStr),
-        period: parseInt(periodStr)
-      };
-      console.log('Parsed drop ID:', dropId, 'Result:', result);
-      return result;
-    };
+    const { source, destination, draggableId } = result;
 
     try {
       // Moving between schedule slots
       if (source.droppableId !== 'unscheduled' && destination.droppableId !== 'unscheduled') {
-        console.log('Moving between schedule slots');
-        const destPos = parseDropId(destination.droppableId);
-        const sourcePos = parseDropId(source.droppableId);
-
-        console.log('Checking conflicts...');
+        const [destDay, destPeriod] = destination.droppableId.split('-').map(Number);
         const conflicts = await scheduleApi.checkConflicts(
           schedule.metadata.version,
           draggableId,
-          destPos.day,
-          destPos.period
+          destDay,
+          destPeriod
         );
 
         if (conflicts.hasConflicts) {
-          console.log('Conflict detected! Cancelling move.');
           toast({
             title: "Scheduling Conflict",
             description: "This time slot conflicts with existing classes",
@@ -160,108 +202,29 @@ export function ScheduleGenerator() {
           return;
         }
 
-        console.log('Updating class position...');
         const updatedSchedule = await scheduleApi.updateClass(
           schedule.metadata.version,
           draggableId,
-          { dayOfWeek: destPos.day, period: destPos.period }
+          { dayOfWeek: destDay, period: destPeriod }
         );
-        console.log('Schedule updated successfully');
         setSchedule(updatedSchedule);
-        return;
       }
-
-      // Moving to unscheduled area
-      if (destination.droppableId === 'unscheduled') {
-        console.log('Moving class to unscheduled area');
-        const sourcePos = parseDropId(source.droppableId);
-        const classToUnschedule = schedule.classes.find(c => c.id === draggableId);
-        if (!classToUnschedule) {
-          console.log('Class not found!', draggableId);
-          return;
-        }
-
-        console.log('Unscheduling class...');
-        const updatedSchedule = await scheduleApi.unscheduleClass(
-          schedule.metadata.version,
-          draggableId
-        );
-
-        console.log('Updating states...');
-        setSchedule(updatedSchedule);
-        setUnscheduledClasses(prev => {
-          const newState = [...prev, {
-            ...classToUnschedule,
-            originalDayOfWeek: sourcePos.day,
-            originalPeriod: sourcePos.period
-          }];
-          console.log('New unscheduled classes:', newState);
-          return newState;
-        });
-        return;
-      }
-
-      // Moving from unscheduled to schedule
-      if (source.droppableId === 'unscheduled') {
-        console.log('Moving from unscheduled to schedule');
-        const destPos = parseDropId(destination.droppableId);
-
-        console.log('Checking conflicts...');
-        const conflicts = await scheduleApi.checkConflicts(
-          schedule.metadata.version,
-          draggableId,
-          destPos.day,
-          destPos.period
-        );
-
-        if (conflicts.hasConflicts) {
-          console.log('Conflict detected! Cancelling move.');
-          toast({
-            title: "Scheduling Conflict",
-            description: "This time slot conflicts with existing classes",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        console.log('Updating class position...');
-        const updatedSchedule = await scheduleApi.updateClass(
-          schedule.metadata.version,
-          draggableId,
-          { dayOfWeek: destPos.day, period: destPos.period }
-        );
-
-        console.log('Updating states...');
-        setSchedule(updatedSchedule);
-        setUnscheduledClasses(prev => {
-          const newState = prev.filter(c => c.id !== draggableId);
-          console.log('New unscheduled classes:', newState);
-          return newState;
-        });
-        return;
-      }
+      // Handle other drag scenarios...
     } catch (error) {
-      console.error('Operation failed:', error);
       toast({
         title: "Error",
         description: "Failed to update class schedule",
         variant: "destructive",
       });
     }
-    console.log('=== Drag Operation Completed ===');
   };
 
   const handleUndoUnschedule = async (classItem: ScheduledClass) => {
-    console.log('=== Undo Unschedule Started ===');
-    console.log('Class:', classItem);
-
     if (!schedule || !classItem.originalDayOfWeek || !classItem.originalPeriod) {
-      console.log('Missing required data for undo operation');
       return;
     }
 
     try {
-      console.log('Rescheduling class...');
       const updatedSchedule = await scheduleApi.rescheduleClass(
         schedule.metadata.version,
         classItem.id,
@@ -271,120 +234,119 @@ export function ScheduleGenerator() {
         }
       );
 
-      console.log('Updating states...');
       setSchedule(updatedSchedule);
-      setUnscheduledClasses(prev => {
-        const newState = prev.filter(c => c.id !== classItem.id);
-        console.log('New unscheduled classes:', newState);
-        return newState;
-      });
-      console.log('Undo completed successfully');
+      setUnscheduledClasses(prev => prev.filter(c => c.id !== classItem.id));
     } catch (error) {
-      console.error('Undo operation failed:', error);
       toast({
         title: "Error",
         description: "Failed to reschedule class",
         variant: "destructive",
       });
     }
-    console.log('=== Undo Operation Completed ===');
   };
 
   const handleClassMove = (classId: string, newDayOfWeek: number, newPeriod: number) => {
-    if (!schedule) return;
-    
-    // We're using the drag-and-drop handling, so this can be a no-op
-    console.log('Class move via callback:', { classId, newDayOfWeek, newPeriod });
+    // This is handled by drag and drop, but we keep it for compatibility
+    console.log('Class move requested:', { classId, newDayOfWeek, newPeriod });
   };
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="container mx-auto p-4">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Schedule Generator</CardTitle>
           </CardHeader>
-          <CardContent className="p-4">
-            <div className="flex flex-col items-start">
-              <div className="mb-4">
-                <h3 className="text-lg font-medium mb-2">Select Start Date</h3>
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  defaultMonth={new Date()}
-                  className="border rounded-md p-3"
-                  classNames={{
-                    months: "flex flex-col",
-                    month: "space-y-4",
-                    caption: "flex justify-start pt-1 relative items-center",
-                    caption_label: "text-sm font-medium",
-                    nav: "space-x-1 flex items-center absolute right-1",
-                    nav_button: "h-7 w-7 bg-transparent p-0 hover:opacity-80",
-                    table: "w-full border-collapse space-y-1",
-                    head_row: "flex justify-between",
-                    head_cell: "w-10 font-medium text-sm text-muted-foreground",
-                    row: "flex justify-between mt-2",
-                    cell: "h-10 w-10 text-center relative p-0",
-                    day: "h-10 w-10 p-0 hover:bg-accent hover:text-accent-foreground",
-                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
-                    day_today: "bg-accent text-accent-foreground",
-                    day_outside: "text-muted-foreground opacity-50",
-                    day_disabled: "text-muted-foreground opacity-50 pointer-events-none"
-                  }}
-                  disabled={(date) => 
-                    date < new Date(new Date().setHours(0, 0, 0, 0)) || 
-                    date.getDay() === 0 || 
-                    date.getDay() === 6
-                  }
-                />
-              </div>
-              <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-[350px] mx-auto">
-                <Button
-                  onClick={generateSchedule}
-                  disabled={generating || !startDate}
-                  className="w-full sm:flex-1"
+          <CardContent>
+            <div className="mb-4">
+              <h3 className="text-lg font-medium mb-2">Select Start Date</h3>
+              <Calendar
+                mode="single"
+                selected={startDate}
+                onSelect={setStartDate}
+                className="rounded-md border"
+                disabled={(date) => 
+                  date < new Date() || 
+                  date.getDay() === 0 || 
+                  date.getDay() === 6
+                }
+              />
+            </div>
+            <div className="space-x-4">
+              <Button 
+                onClick={generateSchedule} 
+                disabled={generating}
+                className={cn(generating && "opacity-50 cursor-not-allowed")}
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  'Generate Schedule'
+                )}
+              </Button>
+              {schedule && (
+                <Button 
+                  onClick={optimizeSchedule}
+                  disabled={generating}
+                  variant="outline"
+                  className={cn(generating && "opacity-50 cursor-not-allowed")}
                 >
                   {generating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
+                      Optimizing...
                     </>
                   ) : (
-                    'Generate Schedule'
+                    'Optimize Schedule'
                   )}
                 </Button>
-                {schedule && (
-                  <Button
-                    onClick={optimizeSchedule}
-                    disabled={generating}
-                    variant="outline"
-                    className="w-full sm:flex-1"
-                  >
-                    Optimize Schedule
-                  </Button>
-                )}
-              </div>
-              {error && (
-                <div className="mt-2 text-sm text-red-500">
-                  {error}
-                </div>
               )}
             </div>
           </CardContent>
         </Card>
 
         {schedule && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <WeeklySchedule 
-              classes={schedule.classes.filter(c => c.dayOfWeek !== 0)}
-              onClassMove={handleClassMove}
-            />
-            <UnscheduledClasses
-              classes={unscheduledClasses}
-              onUndoUnschedule={handleUndoUnschedule}
-            />
-          </div>
+          <>
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Weekly Schedule</CardTitle>
+                  {schedule.quality?.totalScore !== undefined && (
+                    <div className="text-sm text-muted-foreground">
+                      Quality Score: {schedule.quality.totalScore.toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {schedule && schedule.classes ? (
+                  <WeeklySchedule 
+                    classes={schedule.classes.filter(c => c.dayOfWeek !== 0)}
+                    onClassMove={handleClassMove}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No classes scheduled yet.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Unscheduled Classes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <UnscheduledClasses 
+                  classes={unscheduledClasses}
+                  onUndoUnschedule={handleUndoUnschedule}
+                />
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </DragDropContext>

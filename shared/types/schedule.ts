@@ -60,6 +60,19 @@ export interface Rotation {
   status: 'draft' | 'active' | 'completed';
   schedule: ScheduleEntry[];
   additionalConflicts: AdditionalConflict[];
+  quality?: {
+    totalScore: number;
+    metrics: {
+      dayDistribution: number;
+      timeGaps: number;
+      periodUtilization: number;
+    };
+    details?: {
+      classesPerDay: number[];
+      averageGapLength: number;
+      morningToAfternoonRatio: number;
+    };
+  };
   notes?: string;
   createdAt?: Date;
   updatedAt?: Date;

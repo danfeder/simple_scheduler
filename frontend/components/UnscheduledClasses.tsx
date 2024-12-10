@@ -1,23 +1,13 @@
-"use client";
-
-import { ScheduledClass } from '../../../shared/types/schedule';
+import { ScheduledClass } from "@/types/schedule";
 import { Droppable, Draggable } from 'react-beautiful-dnd';
-import { Button } from '@/components/ui/button';
-import { RotateCcw } from 'lucide-react';
 
 interface UnscheduledClassesProps {
-  classes: ScheduledClass[]
-  onUndoUnschedule: (classItem: ScheduledClass) => void
+  classes: ScheduledClass[];
 }
 
-export default function UnscheduledClasses({ classes, onUndoUnschedule }: UnscheduledClassesProps) {
+export function UnscheduledClasses({ classes }: UnscheduledClassesProps) {
   return (
-    <Droppable 
-      droppableId="unscheduled"
-      isDropDisabled={false}
-      isCombineEnabled={false}
-      ignoreContainerClipping={false}
-    >
+    <Droppable droppableId="unscheduled">
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -27,11 +17,7 @@ export default function UnscheduledClasses({ classes, onUndoUnschedule }: Unsche
           }`}
         >
           {classes.map((classItem, index) => (
-            <Draggable 
-              key={classItem.id} 
-              draggableId={classItem.id} 
-              index={index}
-            >
+            <Draggable key={classItem.id} draggableId={classItem.id} index={index}>
               {(provided, snapshot) => (
                 <div
                   ref={provided.innerRef}
@@ -53,17 +39,6 @@ export default function UnscheduledClasses({ classes, onUndoUnschedule }: Unsche
                   <span className="font-medium text-sm truncate flex-grow text-center">
                     {classItem.name}
                   </span>
-                  {classItem.originalDayOfWeek !== undefined && classItem.originalPeriod !== undefined && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onUndoUnschedule(classItem)}
-                      className="h-6 w-6 ml-2 flex-shrink-0"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                      <span className="sr-only">Undo unschedule</span>
-                    </Button>
-                  )}
                 </div>
               )}
             </Draggable>
@@ -73,4 +48,5 @@ export default function UnscheduledClasses({ classes, onUndoUnschedule }: Unsche
       )}
     </Droppable>
   );
-} 
+}
+

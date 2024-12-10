@@ -90,14 +90,22 @@ export const constraintsApi = {
 };
 
 // Schedule API
+import { Schedule, ScheduleConstraints } from '../../../shared/types/schedule';
+
 export const scheduleApi = {
-  generate: async (startDate: Date) => {
-    const response = await fetch(`${API_BASE_URL}/schedule/generate`, {
+  generate: async (startDate: Date, constraints: ScheduleConstraints): Promise<Rotation> => {
+    const response = await fetch('/api/schedule/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ startDate }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ startDate, constraints }),
     });
-    if (!response.ok) throw new Error('Failed to start generation');
+
+    if (!response.ok) {
+      throw new Error('Failed to generate schedule');
+    }
+
     return response.json();
   },
 
@@ -113,11 +121,15 @@ export const scheduleApi = {
     return response.json();
   },
 
-  optimize: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/schedule/${id}/optimize`, {
+  optimize: async (version: string): Promise<Schedule> => {
+    const response = await fetch(`/api/schedule/${version}/optimize`, {
       method: 'POST',
     });
-    if (!response.ok) throw new Error('Failed to optimize schedule');
+
+    if (!response.ok) {
+      throw new Error('Failed to optimize schedule');
+    }
+
     return response.json();
   },
 
@@ -127,21 +139,35 @@ export const scheduleApi = {
     return response.json();
   },
 
-  updateClass: async (scheduleId: string, classId: string, updates: { dayOfWeek: number; period: number }) => {
-    const response = await fetch(`${API_BASE_URL}/schedule/${scheduleId}/class/${classId}`, {
+  updateClass: async (version: string, classId: string, update: { dayOfWeek: number; period: number }): Promise<Schedule> => {
+    const response = await fetch(`/api/schedule/${version}/class/${classId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(update),
     });
-    if (!response.ok) throw new Error('Failed to update class schedule');
+
+    if (!response.ok) {
+      throw new Error('Failed to update class');
+    }
+
     return response.json();
   },
 
-  checkConflicts: async (scheduleId: string, classId: string, dayOfWeek: number, period: number) => {
-    const response = await fetch(
-      `${API_BASE_URL}/schedule/${scheduleId}/conflicts?classId=${classId}&dayOfWeek=${dayOfWeek}&period=${period}`
-    );
-    if (!response.ok) throw new Error('Failed to check conflicts');
+  checkConflicts: async (version: string, classId: string, dayOfWeek: number, period: number) => {
+    const response = await fetch(`/api/schedule/${version}/conflicts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ classId, dayOfWeek, period }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to check conflicts');
+    }
+
     return response.json();
   },
 
@@ -153,13 +179,19 @@ export const scheduleApi = {
     return response.json();
   },
 
-  rescheduleClass: async (scheduleId: string, classId: string, original: { dayOfWeek: number; period: number }) => {
-    const response = await fetch(`${API_BASE_URL}/schedule/${scheduleId}/class/${classId}/reschedule`, {
+  rescheduleClass: async (version: string, classId: string, update: { dayOfWeek: number; period: number }): Promise<Schedule> => {
+    const response = await fetch(`/api/schedule/${version}/class/${classId}/reschedule`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(original),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(update),
     });
-    if (!response.ok) throw new Error('Failed to reschedule class');
+
+    if (!response.ok) {
+      throw new Error('Failed to reschedule class');
+    }
+
     return response.json();
-  },
+  }
 }; 
