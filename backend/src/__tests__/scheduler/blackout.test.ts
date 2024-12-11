@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 import { SchedulerService } from '../../services/scheduler/schedulerService';
-import { ScheduleConstraints, Class, Period, ScheduleEntry } from '../../../shared/types';
+import { ScheduleConstraints, Class, Period, ScheduleEntry } from '../../../../shared/types';
 
 describe('Blackout Period Functionality', () => {
   const startDate = new Date('2024-01-01'); // Monday
@@ -29,72 +29,90 @@ describe('Blackout Period Functionality', () => {
     }
   ];
 
-  describe('Schedule Generation with Blackouts', () => {
-    it('should not schedule classes during blackout periods', async () => {
-      const blackoutConstraints: ScheduleConstraints = {
-        ...mockConstraints,
-        blackoutPeriods: [
-          { date: new Date('2024-01-01'), period: 1 },
-          { date: new Date('2024-01-01'), period: 2 }
-        ]
-      };
+  it('should respect blackout periods when generating schedule', async () => {
+    const blackoutConstraints = {
+      ...mockConstraints,
+      blackoutPeriods: [
+        { date: '2024-01-01', period: 1 }, // Monday, Period 1
+        { date: '2024-01-01', period: 2 }  // Monday, Period 2
+      ]
+    };
 
-      const scheduler = new SchedulerService(blackoutConstraints);
-      await scheduler.initialize(testClasses);
-      const schedule = await scheduler.generateSchedule(startDate);
-      
-      // Check that no classes are scheduled during blackout periods
-      for (const entry of schedule) {
-        const entryDate = entry.assignedDate.toISOString().split('T')[0];
-        const isBlackout = blackoutConstraints.blackoutPeriods.some(
-          bp => bp.date.toISOString().split('T')[0] === entryDate && bp.period === entry.period
-        );
-        expect(isBlackout).toBe(false);
-      }
+    const scheduler = new SchedulerService(blackoutConstraints, startDate);
+    const schedule = await scheduler.generateSchedule(testClasses);
+
+    // Verify no classes are scheduled during blackout periods
+    schedule.forEach(entry => {
+      const entryDate = entry.date.toISOString().split('T')[0];
+      const isBlackedOut = blackoutConstraints.blackoutPeriods.some(
+        bp => bp.date === entryDate && bp.period === entry.period
+      );
+      expect(isBlackedOut).toBeFalsy();
     });
+  });
 
-    it('should handle fully blocked days', async () => {
-      // Block all periods for a day
-      const blackoutConstraints: ScheduleConstraints = {
-        ...mockConstraints,
-        blackoutPeriods: Array.from({ length: 8 }, (_, i) => ({
-          date: new Date('2024-01-01'),
-          period: (i + 1) as Period
-        }))
-      };
+  it('should handle multiple blackout periods across days', async () => {
+    const blackoutConstraints = {
+      ...mockConstraints,
+      blackoutPeriods: [
+        { date: '2024-01-01', period: 1 }, // Monday
+        { date: '2024-01-02', period: 2 }, // Tuesday
+        { date: '2024-01-03', period: 3 }  // Wednesday
+      ]
+    };
 
-      const scheduler = new SchedulerService(blackoutConstraints);
-      await scheduler.initialize(testClasses);
-      const schedule = await scheduler.generateSchedule(startDate);
+    const scheduler = new SchedulerService(blackoutConstraints, startDate);
+    const schedule = await scheduler.generateSchedule(testClasses);
 
-      // Check that no classes are scheduled on the fully blocked day
-      expect(schedule.some((entry: ScheduleEntry) => 
-        entry.assignedDate.toISOString().split('T')[0] === '2024-01-01'
-      )).toBe(false);
-    });
+    // Verify schedule respects all blackout periods
+    expect(schedule.length).toBe(testClasses.length);
+    expect(schedule.some(entry => 
+      entry.date.toISOString().split('T')[0] === '2024-01-01' && entry.period === 1
+    )).toBeFalsy();
+    expect(schedule.some(entry => 
+      entry.date.toISOString().split('T')[0] === '2024-01-02' && entry.period === 2
+    )).toBeFalsy();
+    expect(schedule.some(entry => 
+      entry.date.toISOString().split('T')[0] === '2024-01-03' && entry.period === 3
+    )).toBeFalsy();
+  });
 
-    it('should handle blocked periods across multiple days', async () => {
-      // Block period 1 across multiple days
-      const blackoutConstraints: ScheduleConstraints = {
-        ...mockConstraints,
-        blackoutPeriods: [
-          { date: new Date('2024-01-01'), period: 1 },
-          { date: new Date('2024-01-02'), period: 1 },
-          { date: new Date('2024-01-03'), period: 1 }
-        ]
-      };
+  it('should filter out invalid blackout periods', async () => {
+    const invalidConstraints = {
+      ...mockConstraints,
+      blackoutPeriods: [
+        { date: '2024-01-06', period: 1 }, // Saturday - should be filtered
+        { date: '2024-01-07', period: 1 }, // Sunday - should be filtered
+        { date: '2024-01-01', period: 0 }, // Invalid period - should be filtered
+        { date: '2024-01-01', period: 9 }, // Invalid period - should be filtered
+        { date: '2024-01-02', period: 3 }  // Valid period - should be respected
+      ]
+    };
 
-      const scheduler = new SchedulerService(blackoutConstraints);
-      await scheduler.initialize(testClasses);
-      const schedule = await scheduler.generateSchedule(startDate);
+    const scheduler = new SchedulerService(invalidConstraints, startDate);
+    const schedule = await scheduler.generateSchedule(testClasses);
+    
+    // Weekend slots should never be used, regardless of blackout periods
+    expect(schedule.some(entry => 
+      entry.date.getDay() === 6 // Saturday
+    )).toBeFalsy();
+    expect(schedule.some(entry => 
+      entry.date.getDay() === 0 // Sunday
+    )).toBeFalsy();
 
-      // Check that no classes are scheduled in period 1 on blocked days
-      for (const entry of schedule) {
-        if (entry.period === 1) {
-          const entryDate = entry.assignedDate.toISOString().split('T')[0];
-          expect(['2024-01-01', '2024-01-02', '2024-01-03']).not.toContain(entryDate);
-        }
-      }
-    });
+    // Invalid period numbers should be ignored
+    expect(schedule.some(entry => 
+      entry.period === 0 || entry.period === 9
+    )).toBeFalsy();
+
+    // Valid blackout period should be respected
+    expect(schedule.some(entry => 
+      entry.date.toISOString().split('T')[0] === '2024-01-02' && entry.period === 3
+    )).toBeFalsy();
+
+    // Other valid periods should be available
+    expect(schedule.some(entry => 
+      entry.date.toISOString().split('T')[0] === '2024-01-02' && entry.period === 1
+    )).toBeTruthy();
   });
 }); 

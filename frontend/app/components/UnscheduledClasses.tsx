@@ -4,13 +4,45 @@ import { ScheduledClass } from '../../../shared/types/schedule';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { Button } from '@/components/ui/button';
 import { RotateCcw } from 'lucide-react';
+import { StorageService } from '../services/StorageService';
+import { BackupCoordinator } from '../services/BackupCoordinator';
+import { toast } from '@/components/ui/use-toast';
 
 interface UnscheduledClassesProps {
   classes: ScheduledClass[]
   onUndoUnschedule: (classItem: ScheduledClass) => void
+  onClassesChange: (updatedClasses: ScheduledClass[]) => void
 }
 
-export default function UnscheduledClasses({ classes, onUndoUnschedule }: UnscheduledClassesProps) {
+export default function UnscheduledClasses({ classes, onUndoUnschedule, onClassesChange }: UnscheduledClassesProps) {
+  const handleClassesUpdate = async (updatedClasses: ScheduledClass[]) => {
+    try {
+      onClassesChange(updatedClasses);
+      
+      await BackupCoordinator.getInstance().createCoordinatedBackup(
+        'unscheduled_classes',
+        updatedClasses,
+        { silent: true }
+      );
+    } catch (error) {
+      console.error('Failed to backup unscheduled classes:', error);
+      toast({
+        title: "Backup Failed",
+        description: "Failed to backup class changes. Your changes are saved but not backed up.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const restoreClassesBackup = async () => {
+    const restoredClasses = await BackupCoordinator.getInstance()
+      .restoreLatestBackup('unscheduled_classes');
+    
+    if (restoredClasses) {
+      onClassesChange(restoredClasses);
+    }
+  };
+
   return (
     <Droppable 
       droppableId="unscheduled"
@@ -69,6 +101,9 @@ export default function UnscheduledClasses({ classes, onUndoUnschedule }: Unsche
             </Draggable>
           ))}
           {provided.placeholder}
+          <button onClick={restoreClassesBackup}>
+            Restore Previous Classes
+          </button>
         </div>
       )}
     </Droppable>

@@ -102,7 +102,7 @@ export function BlackoutCalendar({
   }, [blackoutPeriods, currentWeekStart]);
 
   return (
-    <Card className="w-full overflow-x-auto">
+    <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">
           Week of {currentWeekStart.toLocaleDateString()}
@@ -119,22 +119,24 @@ export function BlackoutCalendar({
         </div>
       </CardHeader>
       <CardContent className="p-4">
-        <div className="grid grid-cols-[auto_repeat(5,1fr)] gap-2 mb-2">
-          <div className="w-20"></div>
+        <div className="grid grid-cols-[100px_repeat(5,minmax(0,1fr))] gap-2">
+          <div className="flex items-center justify-center">
+            <ArrowRightLeft className="h-4 w-4 text-gray-400" />
+          </div>
           {days.map((day, index) => {
             const date = new Date(currentWeekStart);
             date.setDate(currentWeekStart.getDate() + index);
             const dateString = formatDate(date);
             const isBlocked = isFullDayBlackedOut(dateString);
             return (
-              <div key={day} className="text-center">
-                <div className="font-semibold">{day}</div>
-                <div className="text-sm text-gray-500 mb-1">{formatDateHeader(date)}</div>
+              <div key={day} className="text-center px-1">
+                <div className="font-semibold text-sm mb-0.5">{day}</div>
+                <div className="text-xs text-gray-500 mb-1">{formatDateHeader(date)}</div>
                 <Button
                   variant={isBlocked ? "default" : "outline"}
                   size="sm"
                   onClick={() => onToggleFullDay(dateString)}
-                  className="gap-1"
+                  className="w-full gap-1 h-7 text-xs"
                   title={`${isBlocked ? "Unblock" : "Block"} all periods on ${day}`}
                 >
                   {isBlocked ? (
@@ -152,16 +154,14 @@ export function BlackoutCalendar({
               </div>
             );
           })}
-        </div>
 
-        <div className="space-y-2">
           {periods.map(period => (
-            <div key={period} className="grid grid-cols-[auto_repeat(5,1fr)] gap-2">
-              <div className="w-20 flex items-center justify-center">
+            <div key={period} className="contents">
+              <div className="flex items-center justify-center py-0.5">
                 <Button
                   variant={isPeriodFullyBlackedOut(period) ? "default" : "outline"}
                   size="sm"
-                  className="gap-1"
+                  className="gap-1 w-full h-7 text-xs"
                   onClick={() => onTogglePeriodForWeek(period, currentWeekStart)}
                   title={`${isPeriodFullyBlackedOut(period) ? "Unblock" : "Block"} Period ${period} across all days`}
                 >
@@ -187,9 +187,9 @@ export function BlackoutCalendar({
                   <div
                     key={`${day}-${period}`}
                     className={`
-                      h-10 rounded transition-all
+                      h-7 rounded transition-all
                       flex items-center justify-center
-                      cursor-pointer
+                      cursor-pointer text-sm
                       ${isBlocked 
                         ? 'bg-foreground text-background border-foreground hover:bg-foreground/80 hover:border-2' 
                         : 'bg-background hover:bg-foreground/10 hover:border-foreground hover:border-2 border-border'
@@ -203,7 +203,7 @@ export function BlackoutCalendar({
                     tabIndex={0}
                     title={`${day}, Period ${period}`}
                   >
-                    <span className="text-base font-medium">
+                    <span className="text-sm font-medium">
                       {period}
                     </span>
                   </div>

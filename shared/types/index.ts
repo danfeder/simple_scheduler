@@ -1,4 +1,6 @@
 export * from './base';
 export * from './class';
 export * from './schedule';
-export * from './optimization'; 
+export * from './optimization';
+export * from './graph';
+export * from './services'; 

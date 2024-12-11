@@ -6530,5 +6530,355 @@
     "additionalConflicts": [],
     "createdAt": "2024-12-10T04:41:42.245Z",
     "updatedAt": "2024-12-10T04:41:42.269Z"
+  },
+  {
+    "id": "0c641de3-aa90-4d60-8c82-b286e857f7ed",
+    "startDate": "2024-12-16T05:00:00.000Z",
+    "schedule": [
+      {
+        "classId": "8ede4d99-58a9-4ee9-b787-1b2f09882607",
+        "assignedDate": "2024-12-16T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "0e0e8ac1-e563-4a52-b9d3-2627de0435d9",
+        "assignedDate": "2024-12-17T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "15f24c9d-c805-4444-8558-fb144f7816ba",
+        "assignedDate": "2024-12-18T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "68fbbccd-d4e1-44df-8e95-113538e321e8",
+        "assignedDate": "2024-12-19T05:00:00.000Z",
+        "period": 2
+      },
+      {
+        "classId": "e7aab47d-a077-4f18-842c-3600433595dd",
+        "assignedDate": "2024-12-20T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "159fc44a-696f-4ce1-af60-96aae592eb7e",
+        "assignedDate": "2024-12-16T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "c4b0a069-3035-40a5-8e39-7cd49af52f75",
+        "assignedDate": "2024-12-17T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "0a121256-d2e5-44c3-b0c2-75d3dfc23249",
+        "assignedDate": "2024-12-18T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "797f0e4d-03fc-406a-b7c1-4e8b8cddca57",
+        "assignedDate": "2024-12-19T05:00:00.000Z",
+        "period": 2
+      },
+      {
+        "classId": "0b8535b9-94cb-42a1-98c5-200cb9f3a8e7",
+        "assignedDate": "2024-12-20T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "a96eda40-c268-4aac-bb3a-bfe5b7759ae5",
+        "assignedDate": "2024-12-16T05:00:00.000Z",
+        "period": 3
+      },
+      {
+        "classId": "3cb698b4-6bad-4717-97d7-17bcf5b4c143",
+        "assignedDate": "2024-12-17T05:00:00.000Z",
+        "period": 3
+      },
+      {
+        "classId": "207a08ad-4d61-4d12-abfc-e007274b4a42",
+        "assignedDate": "2024-12-18T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "1aa59870-200a-435b-982d-4703fde9496c",
+        "assignedDate": "2024-12-19T05:00:00.000Z",
+        "period": 5
+      },
+      {
+        "classId": "d8a9acea-372e-4ae1-a804-ee4723d65204",
+        "assignedDate": "2024-12-20T05:00:00.000Z",
+        "period": 3
+      },
+      {
+        "classId": "dca249e5-ae5e-4b2d-900c-b2fee6ce9790",
+        "assignedDate": "2024-12-23T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "6db82913-decb-4bb5-a565-9d5852f1d170",
+        "assignedDate": "2024-12-24T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "99cd66ce-93c5-4e23-af2f-d235a6abc70f",
+        "assignedDate": "2024-12-25T05:00:00.000Z",
+        "period": 2
+      },
+      {
+        "classId": "adae0dae-ddef-43ac-9452-d6236082b64e",
+        "assignedDate": "2024-12-26T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "4130908a-07c2-41b2-b2bc-4ca242e951f4",
+        "assignedDate": "2024-12-27T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "3f0c7c54-9ca8-401a-8d35-a2a48b4fed5c",
+        "assignedDate": "2024-12-23T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "261cfad8-1529-4567-bc2e-76a6f83061f5",
+        "assignedDate": "2024-12-24T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "3f71dfac-460e-4405-8fd6-0634e6bc8679",
+        "assignedDate": "2024-12-25T05:00:00.000Z",
+        "period": 2
+      },
+      {
+        "classId": "34114fa0-1e05-477e-b539-336842cb261c",
+        "assignedDate": "2024-12-26T05:00:00.000Z",
+        "period": 3
+      },
+      {
+        "classId": "7e5e08c2-55fd-4b1d-9fb3-c98c6db25398",
+        "assignedDate": "2024-12-27T05:00:00.000Z",
+        "period": 3
+      },
+      {
+        "classId": "68cf4f80-447b-4215-8690-b11c50daddd9",
+        "assignedDate": "2024-12-23T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "cdb93c3d-c9a5-44f9-8a6d-76e9f12fd8c1",
+        "assignedDate": "2024-12-24T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "347086b4-2469-4c9c-ad78-b35a77915352",
+        "assignedDate": "2024-12-25T05:00:00.000Z",
+        "period": 2
+      },
+      {
+        "classId": "0dc4c98a-c414-49bf-8ffd-5f95be56b15c",
+        "assignedDate": "2024-12-26T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "2f47b92b-5fe9-4650-8b62-e2d24169bce0",
+        "assignedDate": "2024-12-27T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "ef2b0b4b-e978-44e8-8907-d51213242002",
+        "assignedDate": "2024-12-30T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "247ff0cc-74d8-4e81-bf81-8236c9cf09f1",
+        "assignedDate": "2024-12-31T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "c3b0eab5-85f0-4959-9afa-c4f31cfda262",
+        "assignedDate": "2025-01-01T05:00:00.000Z",
+        "period": 1
+      }
+    ],
+    "status": "draft",
+    "additionalConflicts": [],
+    "createdAt": "2024-12-10T22:08:47.980Z",
+    "updatedAt": "2024-12-10T22:08:48.017Z"
+  },
+  {
+    "id": "ef22c3c4-2793-4f69-819e-ea95dfa94ba5",
+    "startDate": "2024-12-16T05:00:00.000Z",
+    "schedule": [
+      {
+        "classId": "8ede4d99-58a9-4ee9-b787-1b2f09882607",
+        "assignedDate": "2024-12-16T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "0e0e8ac1-e563-4a52-b9d3-2627de0435d9",
+        "assignedDate": "2024-12-17T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "15f24c9d-c805-4444-8558-fb144f7816ba",
+        "assignedDate": "2024-12-18T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "68fbbccd-d4e1-44df-8e95-113538e321e8",
+        "assignedDate": "2024-12-19T05:00:00.000Z",
+        "period": 2
+      },
+      {
+        "classId": "e7aab47d-a077-4f18-842c-3600433595dd",
+        "assignedDate": "2024-12-20T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "159fc44a-696f-4ce1-af60-96aae592eb7e",
+        "assignedDate": "2024-12-16T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "c4b0a069-3035-40a5-8e39-7cd49af52f75",
+        "assignedDate": "2024-12-17T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "0a121256-d2e5-44c3-b0c2-75d3dfc23249",
+        "assignedDate": "2024-12-18T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "797f0e4d-03fc-406a-b7c1-4e8b8cddca57",
+        "assignedDate": "2024-12-19T05:00:00.000Z",
+        "period": 2
+      },
+      {
+        "classId": "0b8535b9-94cb-42a1-98c5-200cb9f3a8e7",
+        "assignedDate": "2024-12-20T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "a96eda40-c268-4aac-bb3a-bfe5b7759ae5",
+        "assignedDate": "2024-12-16T05:00:00.000Z",
+        "period": 3
+      },
+      {
+        "classId": "3cb698b4-6bad-4717-97d7-17bcf5b4c143",
+        "assignedDate": "2024-12-17T05:00:00.000Z",
+        "period": 3
+      },
+      {
+        "classId": "207a08ad-4d61-4d12-abfc-e007274b4a42",
+        "assignedDate": "2024-12-18T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "1aa59870-200a-435b-982d-4703fde9496c",
+        "assignedDate": "2024-12-19T05:00:00.000Z",
+        "period": 5
+      },
+      {
+        "classId": "d8a9acea-372e-4ae1-a804-ee4723d65204",
+        "assignedDate": "2024-12-20T05:00:00.000Z",
+        "period": 3
+      },
+      {
+        "classId": "dca249e5-ae5e-4b2d-900c-b2fee6ce9790",
+        "assignedDate": "2024-12-23T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "6db82913-decb-4bb5-a565-9d5852f1d170",
+        "assignedDate": "2024-12-24T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "99cd66ce-93c5-4e23-af2f-d235a6abc70f",
+        "assignedDate": "2024-12-25T05:00:00.000Z",
+        "period": 2
+      },
+      {
+        "classId": "adae0dae-ddef-43ac-9452-d6236082b64e",
+        "assignedDate": "2024-12-26T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "4130908a-07c2-41b2-b2bc-4ca242e951f4",
+        "assignedDate": "2024-12-27T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "3f0c7c54-9ca8-401a-8d35-a2a48b4fed5c",
+        "assignedDate": "2024-12-23T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "261cfad8-1529-4567-bc2e-76a6f83061f5",
+        "assignedDate": "2024-12-24T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "3f71dfac-460e-4405-8fd6-0634e6bc8679",
+        "assignedDate": "2024-12-25T05:00:00.000Z",
+        "period": 2
+      },
+      {
+        "classId": "34114fa0-1e05-477e-b539-336842cb261c",
+        "assignedDate": "2024-12-26T05:00:00.000Z",
+        "period": 3
+      },
+      {
+        "classId": "7e5e08c2-55fd-4b1d-9fb3-c98c6db25398",
+        "assignedDate": "2024-12-27T05:00:00.000Z",
+        "period": 3
+      },
+      {
+        "classId": "68cf4f80-447b-4215-8690-b11c50daddd9",
+        "assignedDate": "2024-12-23T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "cdb93c3d-c9a5-44f9-8a6d-76e9f12fd8c1",
+        "assignedDate": "2024-12-24T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "347086b4-2469-4c9c-ad78-b35a77915352",
+        "assignedDate": "2024-12-25T05:00:00.000Z",
+        "period": 2
+      },
+      {
+        "classId": "0dc4c98a-c414-49bf-8ffd-5f95be56b15c",
+        "assignedDate": "2024-12-26T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "2f47b92b-5fe9-4650-8b62-e2d24169bce0",
+        "assignedDate": "2024-12-27T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "ef2b0b4b-e978-44e8-8907-d51213242002",
+        "assignedDate": "2024-12-30T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "247ff0cc-74d8-4e81-bf81-8236c9cf09f1",
+        "assignedDate": "2024-12-31T05:00:00.000Z",
+        "period": 1
+      },
+      {
+        "classId": "c3b0eab5-85f0-4959-9afa-c4f31cfda262",
+        "assignedDate": "2025-01-01T05:00:00.000Z",
+        "period": 1
+      }
+    ],
+    "status": "draft",
+    "additionalConflicts": [],
+    "createdAt": "2024-12-10T22:21:06.792Z",
+    "updatedAt": "2024-12-10T22:21:06.842Z"
   }
 ]

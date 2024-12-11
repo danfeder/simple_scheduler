@@ -4,15 +4,19 @@ import { SchedulerOptimizer } from './optimizer';
 import { MultiWeekOptimizer } from './multiWeekOptimizer';
 import { sortByConstraints } from '../common/sorting';
 import { OptimizationResult, Schedule, ScheduledClass } from './types';
+import { SchedulerError, ConstraintViolationError, OptimizationError, RoomAssignmentError } from '../../errors/schedulerErrors';
+import { SchedulerMetrics } from '../monitoring/schedulerMetrics';
 
 export class SchedulerService {
   private classes: Map<string, Class> = new Map();
   private constraints: ScheduleConstraints;
   private schedule: ScheduleEntry[] = [];
   private optimizer: MultiWeekOptimizer | null = null;
+  private metrics: SchedulerMetrics;
 
   constructor(constraints: ScheduleConstraints) {
     this.constraints = constraints;
+    this.metrics = SchedulerMetrics.getInstance();
   }
 
   async initialize(classes: Class[]): Promise<void> {
@@ -97,7 +101,7 @@ export class SchedulerService {
       weeksSearched++;
     }
 
-    throw new Error('Could not find an available slot within 10 weeks');
+    throw new ConstraintViolationError('Could not find an available slot within 10 weeks');
   }
 
   private getWeekKey(date: Date): string {
@@ -129,14 +133,42 @@ export class SchedulerService {
   }
 
   async generateSchedule(startDate: Date): Promise<ScheduleEntry[]> {
-    const sortedClasses = this.sortClassesByConstraints(Array.from(this.classes.values()));
-    const success = await this.scheduleWithBacktracking(sortedClasses, startDate);
-    
-    if (!success) {
-      throw new Error('Could not find a valid schedule with the given constraints');
+    try {
+      this.metrics.startGeneration();
+      const sortStart = performance.now();
+      const sortedClasses = this.sortClassesByConstraints(Array.from(this.classes.values()));
+      const sortEnd = performance.now();
+
+      this.metrics.recordPerformanceMetrics({
+        sortingDurationMs: sortEnd - sortStart,
+        totalClassCount: sortedClasses.length,
+        schedulingDurationMs: 0  // Will be updated after scheduling
+      });
+
+      const scheduleStart = performance.now();
+      const success = await this.scheduleWithBacktracking(sortedClasses, startDate);
+      const scheduleEnd = performance.now();
+
+      this.metrics.recordPerformanceMetrics({
+        sortingDurationMs: sortEnd - sortStart,
+        totalClassCount: sortedClasses.length,
+        schedulingDurationMs: scheduleEnd - scheduleStart
+      });
+      
+      if (!success) {
+        throw new ConstraintViolationError('Could not find a valid schedule that satisfies all constraints');
+      }
+
+      this.metrics.endGeneration();
+      this.metrics.logMetrics();
+      
+      return this.schedule;
+    } catch (error) {
+      if (error instanceof SchedulerError) {
+        throw error;
+      }
+      throw new SchedulerError('Failed to generate schedule', 'GENERATION_FAILED');
     }
-    
-    return this.schedule;
   }
 
   async scheduleWithBacktracking(classes: Class[], startDate: Date): Promise<boolean> {
@@ -224,49 +256,65 @@ export class SchedulerService {
   }
 
   private isValidSlot(cls: Class, date: Date, period: number): boolean {
-    // Check class-specific conflicts
-    const dayOfWeek = date.getDay() as DayOfWeek;
-    if (cls.defaultConflicts.some(c => c.dayOfWeek === dayOfWeek && c.period === period)) {
-      return false;
+    try {
+      // Check class-specific conflicts
+      const dayOfWeek = date.getDay() as DayOfWeek;
+      if (cls.defaultConflicts.some(c => c.dayOfWeek === dayOfWeek && c.period === period)) {
+        this.metrics.recordConstraintViolation();
+        throw new ConstraintViolationError(`Class ${cls.id} has a conflict on ${dayOfWeek} period ${period}`);
+      }
+
+      // Check blackout periods
+      if (this.isBlackoutPeriod(date, period)) {
+        this.metrics.recordConstraintViolation();
+        throw new ConstraintViolationError(`Period ${period} on ${date.toISOString()} is a blackout period`);
+      }
+
+      // Get classes already scheduled for this day and week
+      const dateKey = date.toISOString().split('T')[0];
+      const weekKey = this.getWeekKey(date);
+      
+      const classesInDay = this.schedule.filter(e => 
+        e.assignedDate.toISOString().split('T')[0] === dateKey
+      ).length;
+
+      const classesInWeek = this.schedule.filter(e => 
+        this.getWeekKey(e.assignedDate) === weekKey
+      ).length;
+
+      // Check daily and weekly limits
+      if (classesInDay >= this.constraints.maxPeriodsPerDay) {
+        this.metrics.recordConstraintViolation();
+        throw new ConstraintViolationError(`Maximum periods per day (${this.constraints.maxPeriodsPerDay}) exceeded`);
+      }
+      
+      if (classesInWeek >= this.constraints.maxPeriodsPerWeek) {
+        this.metrics.recordConstraintViolation();
+        throw new ConstraintViolationError(`Maximum periods per week (${this.constraints.maxPeriodsPerWeek}) exceeded`);
+      }
+
+      // Check consecutive period constraints
+      if (this.constraints.avoidConsecutivePeriods && 
+          this.wouldViolateConsecutiveConstraints(date, period)) {
+        this.metrics.recordConstraintViolation();
+        throw new ConstraintViolationError('Consecutive periods are not allowed');
+      }
+
+      return true;
+    } catch (error) {
+      if (error instanceof ConstraintViolationError) {
+        return false;
+      }
+      throw error;
     }
-
-    // Check blackout periods
-    if (this.isBlackoutPeriod(date, period)) {
-      return false;
-    }
-
-    // Get classes already scheduled for this day and week
-    const dateKey = date.toISOString().split('T')[0];
-    const weekKey = this.getWeekKey(date);
-    
-    const classesInDay = this.schedule.filter(e => 
-      e.assignedDate.toISOString().split('T')[0] === dateKey
-    ).length;
-
-    const classesInWeek = this.schedule.filter(e => 
-      this.getWeekKey(e.assignedDate) === weekKey
-    ).length;
-
-    // Check daily and weekly limits
-    if (classesInDay >= this.constraints.maxPeriodsPerDay ||
-        classesInWeek >= this.constraints.maxPeriodsPerWeek) {
-      return false;
-    }
-
-    // Check consecutive period constraints
-    if (this.constraints.avoidConsecutivePeriods && 
-        this.wouldViolateConsecutiveConstraints(date, period)) {
-      return false;
-    }
-
-    return true;
   }
 
   async optimizeSchedule(startDate: Date, maxTimeSeconds: number = 30): Promise<OptimizationResult> {
-    console.group('Schedule Optimization');
-    const totalStartTime = performance.now();
-
     try {
+      this.metrics.startGeneration();
+      console.group('Schedule Optimization');
+      const totalStartTime = performance.now();
+
       console.log(`Parameters: startDate=${startDate}, maxTimeSeconds=${maxTimeSeconds}`);
       console.log(`Current schedule has ${this.schedule.length} entries`);
       console.log(`Constraints:`, this.constraints);
@@ -347,6 +395,20 @@ export class SchedulerService {
       const totalTime = performance.now() - totalStartTime;
       console.log(`\nTotal optimization time: ${totalTime.toFixed(2)}ms`);
 
+      if (result.schedule) {
+        this.metrics.recordQualityMetrics({
+          averageClassesPerDay: result.score.metrics.dayDistribution * 100,
+          dayUtilization: result.score.metrics.periodUtilization * 100,
+          averageGapBetweenClasses: result.score.details.averageGapLength,
+          consecutiveClassCount: result.score.details.classesPerDay.reduce((a, b) => a + b, 0),
+          constraintSatisfactionRate: 1 - (result.score.metrics.timeGaps),
+          totalScore: result.score.totalScore * 100
+        });
+      }
+
+      this.metrics.endGeneration();
+      this.metrics.logMetrics();
+
       return result;
     } catch (error) {
       console.group('Optimization Error');
@@ -357,7 +419,11 @@ export class SchedulerService {
         constraints: this.constraints
       });
       console.groupEnd();
-      throw error;
+      
+      if (error instanceof SchedulerError) {
+        throw error;
+      }
+      throw new OptimizationError('Failed to optimize schedule');
     } finally {
       console.groupEnd(); // Schedule Optimization
     }

@@ -12,6 +12,8 @@ import WeeklySchedule from './WeeklySchedule';
 import UnscheduledClasses from './UnscheduledClasses';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { StorageService } from '../services/StorageService';
+import { BackupCoordinator } from '../services/BackupCoordinator';
 
 // Define types for the rotation response
 interface ScheduleEntry {
@@ -250,6 +252,36 @@ export function ScheduleGenerator() {
     console.log('Class move requested:', { classId, newDayOfWeek, newPeriod });
   };
 
+  const handleGenerateSchedule = async () => {
+    try {
+      const newSchedule = await generateSchedule();
+      setSchedule(newSchedule);
+      
+      // Create coordinated backup
+      await BackupCoordinator.getInstance().createCoordinatedBackup(
+        'schedule',
+        newSchedule,
+        { silent: false }
+      );
+    } catch (error) {
+      console.error('Failed to generate schedule:', error);
+      toast({
+        title: "Generation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRestoreBackup = async () => {
+    const restoredSchedule = await BackupCoordinator.getInstance()
+      .restoreLatestBackup('schedule');
+    
+    if (restoredSchedule) {
+      setSchedule(restoredSchedule);
+    }
+  };
+
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="space-y-6">
@@ -274,7 +306,7 @@ export function ScheduleGenerator() {
             </div>
             <div className="space-x-4">
               <Button 
-                onClick={generateSchedule} 
+                onClick={handleGenerateSchedule} 
                 disabled={generating}
                 className={cn(generating && "opacity-50 cursor-not-allowed")}
               >
@@ -348,6 +380,9 @@ export function ScheduleGenerator() {
             </Card>
           </>
         )}
+        <button onClick={handleRestoreBackup}>
+          Restore Last Backup
+        </button>
       </div>
     </DragDropContext>
   );

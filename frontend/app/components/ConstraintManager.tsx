@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { constraintsApi } from '../lib/api';
 import { toast } from '@/components/ui/use-toast';
 import { BlackoutCalendar } from './BlackoutCalendar';
+import { StorageService } from '../services/StorageService';
+import { BackupCoordinator } from '../services/BackupCoordinator';
 
 interface Constraints {
   maxPeriodsPerWeek: number;
@@ -175,6 +177,34 @@ export function ConstraintManager() {
     addToHistory(newConstraints);
   };
 
+  const handleConstraintUpdate = async (newConstraints: Constraints) => {
+    try {
+      setConstraints(newConstraints);
+      
+      await BackupCoordinator.getInstance().createCoordinatedBackup(
+        'constraints',
+        newConstraints,
+        { silent: true }  // Silent because we're auto-saving
+      );
+    } catch (error) {
+      console.error('Failed to backup constraints:', error);
+      toast({
+        title: "Backup Failed",
+        description: "Failed to backup constraints. Your changes are saved but not backed up.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const restoreConstraintsBackup = async () => {
+    const restoredConstraints = await BackupCoordinator.getInstance()
+      .restoreLatestBackup('constraints');
+    
+    if (restoredConstraints) {
+      setConstraints(restoredConstraints);
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -282,6 +312,9 @@ export function ConstraintManager() {
             className={saving ? 'opacity-50 cursor-not-allowed' : ''}
           >
             {saving ? 'Saving...' : 'Save Constraints'}
+          </Button>
+          <Button onClick={restoreConstraintsBackup}>
+            Restore Previous Constraints
           </Button>
         </div>
       </CardContent>
